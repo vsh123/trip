@@ -6,165 +6,453 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Trip</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
 <style>
-/* 구성: 잠금 화면 → 머리(여행 정보) → 탭(개요 / 시세 / 비용 / 일정). 데이터는 data.enc 를 브라우저에서 복호화해 쓴다 */
+/* 화면: 잠금 → 홈(여행 요약 + 섬별 여정) / 섬(#big-island 등) / 일정 / 비용, 가격 상세는 시트(#prices/<id>) */
 :root {
-  --bg: #f3f6f6; --surface: #ffffff; --fg: #12221f; --muted: #5b6d69; --line: #dbe3e1; --grid: #e8eeec;
-  --accent: #0b7a6e; --accent-soft: rgba(11, 122, 110, 0.12);
-  --up: #d23a4b; --down: #2c66d6; --flat: #6b7a77; --target: #c47a12;
+  --bg: #edf4f5; --surface: #ffffff; --surface-2: #f4f9fa; --fg: #0b2230; --muted: #4a626e; --faint: #566d79;
+  --line: #d2dfe3; --grid: #e5eef0;
+  --sea-0: #cdeeea; --sea-1: #8fd6d2; --sea-2: #3fa9b9; --sea-3: #1b7597; --sea-4: #11496b; --sea-5: #0a2c45;
+  --accent: #0f6d8a; --accent-ink: #ffffff; --accent-soft: rgba(15, 109, 138, 0.10);
+  --up: #c22f3d; --down: #1d5ec2; --flat: #62747c; --target: #a65f08;
+  --warn: #8f5400; --warn-soft: rgba(214, 138, 0, 0.15);
+  --isl-big: #c4441a; --isl-maui: #bc4474; --isl-kauai: #2b7740; --isl-oahu: #13739d;
+  --plum-petal: #fff4d6; --plum-edge: #d0921a; --plum-core: #efb01f;
+  --ticket: #0a2c45; --ticket-fg: #e6f3f6; --ticket-muted: #a3c6d0; --ticket-up: #ff9aa4; --ticket-down: #a8c8ff; --ticket-line: #7fd8e6; --ticket-base: rgba(230, 243, 246, 0.3); --scrim: rgba(6, 30, 45, 0.48); --shadow: 0 20px 60px rgba(8, 40, 60, 0.24);
   --font-ui: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   --font-num: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --tabbar-h: 0px;
+  color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f1716; --surface: #16211f; --fg: #e4eeeb; --muted: #93a6a1; --line: #263532; --grid: #1d2a28;
-    --accent: #3cc3b0; --accent-soft: rgba(60, 195, 176, 0.14);
-    --up: #ff6b78; --down: #6f9dff; --flat: #8c9b98; --target: #f0ac45;
+    --bg: #061823; --surface: #0b2230; --surface-2: #0f2a3a; --fg: #e2edf1; --muted: #9ab0ba; --faint: #8aa1ab;
+    --line: #1c3b4c; --grid: #132f40;
+    --sea-0: #2a8a8f; --sea-1: #1d6c7a; --sea-2: #155269; --sea-3: #0f3c52; --sea-4: #0a2a3c; --sea-5: #051823;
+    --accent: #58c6dd; --accent-ink: #04202b; --accent-soft: rgba(88, 198, 221, 0.13);
+    --up: #ff7582; --down: #7da9ff; --flat: #91a3ab; --target: #f2ae4a;
+    --warn: #f4b860; --warn-soft: rgba(244, 184, 96, 0.14);
+    --isl-big: #ff7f4f; --isl-maui: #f27fab; --isl-kauai: #66c87b; --isl-oahu: #4fbbe8;
+    --plum-petal: #fff0c4; --plum-edge: #f0b43a; --plum-core: #f6c33a;
+    --ticket: #123f58; --ticket-fg: #eaf5f8; --ticket-muted: #a9cbd5; --ticket-up: #ffa3ac; --ticket-down: #b3cfff; --ticket-line: #8ee0ec; --ticket-base: rgba(234, 245, 248, 0.32); --scrim: rgba(0, 8, 14, 0.66); --shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0f1716; --surface: #16211f; --fg: #e4eeeb; --muted: #93a6a1; --line: #263532; --grid: #1d2a28;
-  --accent: #3cc3b0; --accent-soft: rgba(60, 195, 176, 0.14);
-  --up: #ff6b78; --down: #6f9dff; --flat: #8c9b98; --target: #f0ac45;
+  --bg: #061823; --surface: #0b2230; --surface-2: #0f2a3a; --fg: #e2edf1; --muted: #9ab0ba; --faint: #8aa1ab;
+  --line: #1c3b4c; --grid: #132f40;
+  --sea-0: #2a8a8f; --sea-1: #1d6c7a; --sea-2: #155269; --sea-3: #0f3c52; --sea-4: #0a2a3c; --sea-5: #051823;
+  --accent: #58c6dd; --accent-ink: #04202b; --accent-soft: rgba(88, 198, 221, 0.13);
+  --up: #ff7582; --down: #7da9ff; --flat: #91a3ab; --target: #f2ae4a;
+  --warn: #f4b860; --warn-soft: rgba(244, 184, 96, 0.14);
+  --isl-big: #ff7f4f; --isl-maui: #f27fab; --isl-kauai: #66c87b; --isl-oahu: #4fbbe8;
+  --plum-petal: #fff0c4; --plum-edge: #f0b43a; --plum-core: #f6c33a;
+  --ticket: #123f58; --ticket-fg: #eaf5f8; --ticket-muted: #a9cbd5; --ticket-up: #ffa3ac; --ticket-down: #b3cfff; --ticket-line: #8ee0ec; --ticket-base: rgba(234, 245, 248, 0.32); --scrim: rgba(0, 8, 14, 0.66); --shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
   color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+html.lock-scroll { overflow: hidden; }
 body {
-  margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 14px; line-height: 1.5;
+  margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 15px; line-height: 1.55;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 20px 48px;
+  padding-bottom: calc(40px + var(--tabbar-h) + env(safe-area-inset-bottom, 0px));
+  overflow-wrap: anywhere; overflow-x: hidden;
 }
 [hidden] { display: none !important; }
-body { overflow-wrap: anywhere; }
-.wrap { width: 100%; max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+a { color: var(--accent); }
+button { font: inherit; color: inherit; }
 .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 .muted { color: var(--muted); }
-h1 { font-size: 20px; margin: 0; font-weight: 700; }
-h2 { font-size: 13px; font-weight: 600; letter-spacing: 0.04em; margin: 0; color: var(--muted); }
-a { color: var(--accent); }
+.up { color: var(--up); } .down { color: var(--down); } .flat { color: var(--flat); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.wrap { width: 100%; max-width: 1200px; margin: 0 auto; }
+h1, h2, h3, h4, h5 { margin: 0; line-height: 1.3; }
+
+/* 수심 띠 */
+.depth { height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--sea-0) 0 20%, var(--sea-1) 20% 40%, var(--sea-2) 40% 60%, var(--sea-3) 60% 80%, var(--sea-4) 80% 100%); }
+
+/* 작은 표식 */
+.tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; line-height: 1.4; padding: 1px 7px; border-radius: 5px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; font-weight: 500; }
+.tag.on { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+.tag.warn { background: var(--warn-soft); border-color: transparent; color: var(--warn); }
+.tag.isl { background: color-mix(in srgb, var(--isl) 14%, transparent); border-color: transparent; color: var(--fg); }
+.tag.isl::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--isl); }
+.tag.off { text-decoration: line-through; }
+.tag.warn, .links .tag, .ev-row .tag { white-space: normal; min-width: 0; }
+.cnt { font-family: var(--font-num); font-size: 12px; color: var(--faint); font-weight: 500; margin-left: 6px; }
+.eyebrow { font-family: var(--font-num); font-size: 12px; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); text-decoration: none; cursor: pointer; }
+.pill:hover { border-color: var(--accent); }
+.more { border: 0; background: none; color: var(--accent); font-size: 13px; font-weight: 600; padding: 4px 0; cursor: pointer; }
+.btn { font-weight: 600; font-size: 15px; padding: 12px 16px; border-radius: 10px; border: 0; background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn-ghost { font-size: 13px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
 
 /* 잠금 */
-.lock { min-height: 70vh; display: flex; align-items: center; justify-content: center; }
-.lock form { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 12px; }
+.lock { min-height: 86vh; display: grid; place-items: center; }
+.lock form { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 14px; }
+.lock h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.01em; }
 .lock .msg { min-height: 20px; font-size: 13px; color: var(--up); }
-.check { flex-direction: row; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
-.check input { width: auto; }
+.lock label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); }
+.lock .check { flex-direction: row; align-items: center; gap: 8px; }
+.lock .check input { width: 18px; height: 18px; }
+.lock input[type=password] { font: inherit; font-size: 16px; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; width: 100%; }
 
-/* 머리, 탭 */
-.head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
-.head .meta { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--muted); margin-top: 2px; }
-.chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 12px; white-space: nowrap; }
-.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
-.tabs a { padding: 8px 12px; text-decoration: none; color: var(--muted); font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
-.tabs a[aria-current="page"] { color: var(--fg); border-bottom-color: var(--accent); font-weight: 600; }
+/* 머리 */
+.top { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding-top: env(safe-area-inset-top, 0px); }
+.top-in { display: flex; align-items: center; gap: 12px; min-height: 54px; }
+.brand { display: flex; align-items: baseline; gap: 10px; text-decoration: none; color: var(--fg); min-width: 0; }
+.brand b { font-weight: 700; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand .num { font-size: 13px; color: var(--accent); font-weight: 600; }
+.topnav { display: flex; gap: 2px; margin-left: auto; }
+.topnav a { padding: 8px 12px; border-radius: 8px; text-decoration: none; color: var(--muted); font-weight: 500; font-size: 14px; }
+.topnav a[aria-current="page"] { color: var(--fg); background: var(--surface); font-weight: 600; box-shadow: inset 0 -2px 0 var(--accent); }
+.top .btn-ghost { flex: none; }
 
-/* 공통 블록 */
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; min-width: 0; }
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
-.stat { background: var(--surface); padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.stat .k { font-size: 12px; color: var(--muted); }
-.stat .v { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.stat .s { font-size: 11px; color: var(--muted); }
-.up { color: var(--up); } .down { color: var(--down); } .flat { color: var(--flat); }
-.badge { font-size: 11px; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
-.badge.on { border-color: transparent; background: var(--accent-soft); color: var(--accent); }
-.badge.warn { border-color: transparent; background: color-mix(in srgb, var(--target) 16%, transparent); color: var(--target); }
-.badge.off { text-decoration: line-through; }
-.table-scroll { overflow-x: auto; margin-top: 8px; }
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12px; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-td { padding: 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
-td.r, th.r { text-align: right; white-space: nowrap; }
-tr:last-child td { border-bottom: 0; }
-tfoot td { font-weight: 600; border-top: 1px solid var(--line); }
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-.seg button { font: inherit; font-size: 12px; font-weight: 500; padding: 5px 11px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
-.seg button + button { border-left: 1px solid var(--line); }
-.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); min-width: 0; }
-input { font: inherit; font-size: 16px; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; min-width: 0; width: 100%; }
-input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.btn { font: inherit; font-weight: 600; font-size: 14px; padding: 10px 14px; border-radius: 8px; border: 0; background: var(--accent); color: var(--surface); cursor: pointer; }
-.btn:disabled { opacity: 0.5; cursor: default; }
-.btn-ghost { font: inherit; font-size: 12px; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
-.foot { font-size: 12px; color: var(--muted); }
-.empty-note { color: var(--muted); padding: 8px 0; }
+/* 하단 탭 */
+.tabbar { display: none; }
+@media (max-width: 759px) {
+  :root { --tabbar-h: 60px; }
+  .topnav { display: none; }
+  .top .btn-ghost { margin-left: auto; }
+  .tabbar { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+    background: color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--line); padding: 0 max(8px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(8px, env(safe-area-inset-left, 0px)); }
+  .tabbar a { height: var(--tabbar-h); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: var(--muted); font-size: 12px; font-weight: 500; }
+  .tabbar a svg { width: 22px; height: 22px; }
+  .tabbar a[aria-current="page"] { color: var(--accent); font-weight: 700; }
+}
+.ico { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 
-/* 개요 */
-.tracker-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
-.tcard { display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit; }
-.tcard:hover { border-color: var(--accent); }
-.tcard .p { font-family: var(--font-num); font-size: 24px; font-weight: 600; }
+/* 홈 */
+.home { display: grid; gap: 20px; padding-top: 8px; }
+.hero { position: relative; padding: 18px 0 4px; display: flex; flex-direction: column; gap: 16px; }
+.hero-row { display: flex; align-items: flex-end; gap: 14px 22px; flex-wrap: wrap; }
+.dday { font-family: var(--font-num); font-weight: 600; font-size: clamp(48px, 15vw, 76px); line-height: 0.9; letter-spacing: -0.04em; color: var(--fg); }
+.dday small { display: block; font-family: var(--font-ui); font-size: 13px; letter-spacing: 0; font-weight: 500; color: var(--muted); margin-top: 8px; }
+.hero h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+.hero .when { color: var(--muted); font-size: 14px; margin-top: 2px; }
+.contour { position: absolute; right: -16px; top: -10px; width: min(460px, 80%); height: 170px; pointer-events: none; color: var(--line); z-index: -1; }
 
-/* 시세 */
-.quote { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 28px; }
-.price-big { font-family: var(--font-num); font-size: clamp(32px, 7vw, 48px); font-weight: 600; line-height: 1.05; letter-spacing: -0.02em; }
-.price-big small { font-family: var(--font-ui); font-size: 0.4em; font-weight: 500; margin-left: 4px; color: var(--muted); }
-.delta { font-family: var(--font-num); font-size: 16px; font-weight: 600; }
-.chart-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: center; margin-bottom: 10px; }
-.controls { display: flex; flex-wrap: wrap; gap: 8px; }
-.legend { font-size: 12px; min-height: 18px; display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--muted); margin-bottom: 6px; }
-.legend b { color: var(--fg); font-family: var(--font-num); font-weight: 600; }
-.chart-box { position: relative; height: 340px; }
-#chart { position: absolute; inset: 0; }
-.chart-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px; color: var(--muted); background: var(--surface); }
-.log { max-height: 360px; overflow-y: auto; margin-top: 8px; }
+/* 섬 순서 띠 */
+.chain { display: flex; gap: 4px; align-items: stretch; list-style: none; margin: 0; padding: 0; }
+.chain > * { min-width: 0; }
+.seg-stop { flex: 2 1 0; display: flex; flex-direction: column; gap: 2px; text-decoration: none; color: var(--fg); padding-top: 10px; position: relative; }
+.seg-stop::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 6px; border-radius: 3px; background: var(--isl); }
+.seg-stop.alt::before { background: linear-gradient(90deg, var(--isl-a) 0 50%, var(--isl-b) 50% 100%); }
+.seg-stop.fly { flex: 1 1 0; color: var(--muted); }
+.seg-stop.fly::before { background: repeating-linear-gradient(90deg, var(--line) 0 6px, transparent 6px 10px); }
+.seg-stop .code { font-family: var(--font-num); font-size: 11px; letter-spacing: 0.08em; color: var(--muted); }
+.seg-stop .nm { font-weight: 700; font-size: 14px; line-height: 1.25; word-break: keep-all; overflow-wrap: normal; }
+.seg-stop.alt .nm { font-size: 13px; }
+.seg-stop .dt { font-family: var(--font-num); font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 0 6px; }
+.seg-link { display: flex; flex-direction: column; gap: 2px; text-decoration: none; color: inherit; min-width: 0; }
+.seg-link:hover .nm { color: var(--accent); }
 
-/* 비용 */
-.items { display: flex; flex-direction: column; gap: 12px; }
-.item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; }
-.item .t { font-weight: 600; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.item .amt { text-align: right; font-family: var(--font-num); font-weight: 600; white-space: nowrap; }
-.item .sub { font-size: 12px; color: var(--muted); }
-.item ul { margin: 4px 0 0; padding-left: 18px; font-size: 12px; color: var(--muted); }
+/* 요약 블록 */
+.sum-grid { display: grid; gap: 12px; }
+.money { background: var(--surface); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--line); }
+.money .k { font-size: 13px; color: var(--muted); }
+.money .big { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 30px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
+.money .big small { font-family: var(--font-ui); font-size: 14px; color: var(--muted); font-weight: 500; margin-left: 2px; }
+.progress { height: 8px; border-radius: 4px; background: var(--grid); overflow: hidden; }
+.progress i { display: block; height: 100%; background: var(--down); border-radius: 4px; min-width: 0; }
+.money .row { display: flex; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.money .row b { color: var(--fg); font-family: var(--font-num); font-weight: 600; }
+.money .ref { font-size: 13px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 10px; }
+.money .ref b { color: var(--fg); font-family: var(--font-num); }
+
+/* 항공 시세 보딩패스 */
+.ticket { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 14px; align-items: center; text-decoration: none; background: var(--ticket); color: var(--ticket-fg); border-radius: 14px; padding: 14px 16px; overflow: hidden; }
+.ticket .tk-e, .ticket .tk-r, .ticket .tk-s { grid-column: 1; }
+.ticket .tk-e { font-family: var(--font-num); font-size: 11px; letter-spacing: 0.08em; color: var(--ticket-muted); text-transform: uppercase; }
+.ticket .tk-r { font-family: var(--font-num); font-size: 20px; font-weight: 600; letter-spacing: 0.02em; }
+.ticket .tk-s { font-size: 12px; color: var(--ticket-muted); }
+.ticket .tk-p { position: relative; grid-column: 2; grid-row: 1 / span 3; align-self: stretch; justify-content: center; text-align: right; border-left: 2px dashed color-mix(in srgb, var(--ticket-fg) 28%, transparent); padding-left: 16px; min-width: 112px; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.ticket .tk-p::before, .ticket .tk-p::after { content: ""; position: absolute; left: -9px; width: 16px; height: 16px; border-radius: 50%; background: var(--bg); }
+.ticket .tk-p::before { top: -22px; } .ticket .tk-p::after { bottom: -22px; }
+.ticket .tk-p b { font-family: var(--font-num); font-size: 17px; font-weight: 600; }
+.ticket .tk-p .d { font-family: var(--font-num); font-size: 12px; }
+.ticket .tk-p .d.up { color: var(--ticket-up); } .ticket .tk-p .d.down { color: var(--ticket-down); } .ticket .tk-p .d.flat { color: var(--ticket-muted); }
+.ticket .spark { width: 96px; height: 26px; }
+.ticket .spark .ln { stroke: var(--ticket-line); } .ticket .spark .end { fill: var(--ticket-line); } .ticket .spark .base { stroke: var(--ticket-base); }
+.ticket:hover .tk-r { text-decoration: underline; text-underline-offset: 3px; }
+
+/* 섬별 여정 카드 */
+.sec-title { display: flex; align-items: baseline; gap: 10px; margin: 6px 0 2px; }
+.sec-title h2 { font-size: 18px; font-weight: 700; }
+.sec-title span { font-size: 13px; color: var(--muted); }
+.stops { display: grid; gap: 12px; }
+.stop { display: flex; flex-direction: column; gap: 8px; }
+.stop-head { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.stop-head .n { font-family: var(--font-num); font-weight: 600; color: var(--fg); }
+.stop-opts { display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); }
+.stop.alt .stop-opts { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.isle-mini { display: flex; flex-direction: column; gap: 6px; text-decoration: none; color: var(--fg); background: var(--surface); border-radius: 12px; padding: 14px; position: relative; overflow: hidden; border: 1px solid var(--line); }
+.isle-mini::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--isl); }
+.isle-mini:hover { border-color: var(--isl); }
+.isle-mini .top-line { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 6px; align-items: center; }
+.isle-mini .code { font-family: var(--font-num); font-size: 11px; letter-spacing: 0.08em; color: var(--muted); white-space: nowrap; }
+.isle-mini h3 { font-size: 18px; font-weight: 700; }
+.isle-mini .line { font-size: 13px; color: var(--muted); }
+.isle-mini .line b { color: var(--fg); font-family: var(--font-num); font-weight: 600; }
+.isle-mini .fav-line { font-size: 13px; display: flex; gap: 6px; align-items: center; color: var(--fg); }
+.fav-mark svg { width: 18px; height: 18px; display: block; }
+.fav-mark .pt { fill: var(--plum-petal); stroke: var(--plum-edge); stroke-width: 1.4; }
+.fav-mark .core { fill: var(--plum-core); }
+.isle-mini .courses-line { font-size: 13px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.foot { font-size: 12px; color: var(--muted); margin-top: 28px; line-height: 1.6; }
+
+/* 섬 화면 */
+.isle { padding-top: 6px; display: flex; flex-direction: column; gap: 20px; }
+.inav { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; position: sticky; top: calc(54px + env(safe-area-inset-top, 0px)); z-index: 20; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 6px 0 10px; }
+.inav-grp { display: inline-flex; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); padding: 2px; }
+.inav-grp a { display: inline-flex; align-items: center; gap: 5px; padding: 6px 10px; min-height: 34px; border-radius: 999px; text-decoration: none; color: var(--muted); font-size: 13px; font-weight: 600; white-space: nowrap; }
+.inav-grp a i { width: 7px; height: 7px; border-radius: 50%; background: var(--isl); }
+.inav-grp a[aria-current="page"] { background: color-mix(in srgb, var(--isl) 16%, var(--surface)); color: var(--fg); }
+.inav-arrow { color: var(--faint); font-size: 12px; }
+@media (max-width: 419px) {
+  .inav { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding-left: 16px; padding-right: 16px; scroll-padding-inline: 16px; }
+  .inav::-webkit-scrollbar { display: none; }
+  .inav-arrow { display: none; }
+  .inav-grp { flex: none; }
+  .inav-grp a { padding: 6px 9px; font-size: 12.5px; }
+}
+.isle-head { position: relative; padding: 18px 16px 16px; border-radius: 16px; overflow: hidden;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--isl) 20%, var(--surface)) 0%, var(--surface) 70%); border: 1px solid color-mix(in srgb, var(--isl) 24%, var(--line)); display: flex; flex-direction: column; gap: 10px; }
+.isle-head .eyebrow { color: color-mix(in srgb, var(--isl) 60%, var(--fg)); }
+.isle-head h2 { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; }
+.isle-head .when { font-size: 14px; color: var(--muted); }
+.isle-head .when b { color: var(--fg); font-weight: 600; }
+.nights { display: flex; flex-wrap: wrap; gap: 6px; }
+.night { font-size: 12px; padding: 3px 9px; border-radius: 6px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); }
+.night b { font-family: var(--font-num); color: var(--fg); font-weight: 600; margin-right: 4px; }
+.evs { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.evs div { display: flex; gap: 8px; align-items: center; }
+.alt-note { font-size: 13px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; color: var(--muted); }
+.alt-note a { font-weight: 600; }
+.clamp { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.clamp.open { display: block; }
+.para { margin: 0; font-size: 14px; color: var(--muted); }
+.jump { display: flex; flex-wrap: wrap; gap: 6px; }
+.isle-grid { display: grid; gap: 28px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1000px) { .isle-grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: start; } }
+.blk { display: flex; flex-direction: column; gap: 10px; min-width: 0; scroll-margin-top: 120px; }
+.blk-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.blk-head h3 { font-size: 18px; font-weight: 700; }
+.blk-head span { font-size: 13px; color: var(--muted); }
+
+/* 숙소 비교 */
+.stays { list-style: none; margin: 0; padding: 0; background: var(--surface); border-radius: 14px; border: 1px solid var(--line); }
+.stay { padding: 12px 12px 12px 6px; border-top: 1px solid var(--grid); scroll-margin-top: 120px; }
+.stay:first-child { border-top: 0; }
+.stay-top { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 0 8px; align-items: start; }
+.fav { width: 40px; height: 40px; border: 0; background: none; padding: 8px; cursor: pointer; border-radius: 10px; color: var(--faint); }
+.fav svg { width: 24px; height: 24px; display: block; }
+.fav .pt { fill: none; stroke: currentColor; stroke-width: 1.4; }
+.fav .core { fill: none; stroke: currentColor; stroke-width: 1.4; }
+.fav[aria-pressed="true"] .pt { fill: var(--plum-petal); stroke: var(--plum-edge); }
+.fav[aria-pressed="true"] .core { fill: var(--plum-core); stroke: var(--plum-core); }
+.fav:hover { color: var(--plum-edge); }
+.stay-toggle { text-align: left; border: 0; background: none; padding: 6px 0 0; cursor: pointer; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.stay-name { font-weight: 700; font-size: 15px; line-height: 1.35; }
+.stay-toggle::after { content: "자세히"; font-size: 12px; color: var(--accent); font-weight: 600; margin-top: 3px; }
+.stay.open .stay-toggle::after { content: "접기"; }
+.stay-sub { font-size: 12px; color: var(--muted); }
+.stay-price { text-align: right; text-decoration: none; color: var(--fg); display: flex; flex-direction: column; align-items: flex-end; padding-top: 6px; border-radius: 6px; }
+.stay-price b { font-family: var(--font-num); font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stay-price .per { font-size: 12px; color: var(--muted); }
+.stay-price .tot { font-size: 12px; color: var(--muted); font-family: var(--font-num); }
+a.stay-price:hover b { color: var(--accent); }
+.stay-meter { margin: 8px 0 0 48px; display: grid; grid-template-columns: minmax(0, 1fr) 76px minmax(64px, auto); gap: 10px; align-items: center; }
+.bar { height: 6px; background: var(--grid); border-radius: 3px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--isl); border-radius: 3px; opacity: 0.85; }
+.spark { width: 76px; height: 24px; display: block; overflow: visible; }
+.spark .ln { fill: none; stroke: var(--isl, var(--accent)); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.spark .end { fill: var(--isl, var(--accent)); }
+.spark .base { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 3; }
+.delta-s { font-family: var(--font-num); font-size: 12px; text-align: right; white-space: nowrap; }
+.cs-note { margin: 8px 0 0 48px; }
+.cs-note .tag { white-space: normal; }
+.stay-detail { margin: 12px 0 4px 48px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; }
+.why { margin: 0; }
+.pc { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 600px) { .pc { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.pc h5 { font-size: 13px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+.pc .good h5::before, .pc .bad h5::before { content: ""; width: 10px; height: 2px; border-radius: 1px; background: var(--down); }
+.pc .bad h5::before { background: var(--up); }
+.pc ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.pc li { padding-left: 12px; position: relative; line-height: 1.5; }
+.pc li::before { content: ""; position: absolute; left: 0; top: 0.7em; width: 4px; height: 4px; border-radius: 50%; background: var(--faint); }
+.src-tag { display: inline; font-size: 12px; color: var(--faint); margin-left: 4px; }
+.note { margin: 0; font-size: 13px; color: var(--muted); }
+.note b { color: var(--fg); font-weight: 600; }
+.links { display: flex; flex-wrap: wrap; gap: 6px; }
+details.srcs-d summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--accent); list-style: none; padding: 4px 0; }
+details.srcs-d summary::-webkit-details-marker { display: none; }
+details.srcs-d summary::before { content: "+ "; font-family: var(--font-num); }
+details.srcs-d[open] summary::before { content: "− "; }
+.srcs { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; font-size: 13px; }
+.src-line { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: baseline; }
+.src-line .date { font-size: 12px; color: var(--faint); }
+.tk { margin: 2px 0 0; font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+/* 하루 코스 */
+.courses { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+.course { background: var(--surface-2); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px; scroll-margin-top: 120px; }
+.course-head { display: flex; gap: 8px; align-items: flex-start; justify-content: space-between; }
+.course-head h4 { font-size: 15px; font-weight: 700; }
+.course-area { font-size: 12px; color: var(--muted); margin-top: -4px; }
+.tl { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.tl li { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 10px; position: relative; padding-bottom: 10px; }
+.tl li::before { content: ""; position: absolute; left: 63px; top: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--isl); }
+.tl li::after { content: ""; position: absolute; left: 66px; top: 18px; bottom: 0; width: 1px; background: var(--line); }
+.tl li:last-child::after { display: none; }
+.tl li:last-child { padding-bottom: 0; }
+.tl .tm { font-size: 12px; color: var(--muted); padding-top: 2px; text-align: right; }
+.tl-body { padding-left: 14px; display: flex; flex-direction: column; min-width: 0; }
+.step-spot { border: 0; background: none; padding: 0; text-align: left; font-weight: 600; font-size: 14px; cursor: pointer; color: var(--fg); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.step-spot:hover { text-decoration-color: var(--accent); }
+.tl-note { font-size: 12px; color: var(--muted); }
+.tl-when { font-size: 12px; color: var(--muted); font-family: var(--font-num); }
+.back { align-self: flex-start; }
+.tip { margin: 0; font-size: 13px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 8px; }
+
+/* 지역별 스폿 */
+.areas { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 700px) { .areas { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .areas { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.area { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.area h4 { font-size: 15px; font-weight: 700; display: flex; align-items: baseline; }
+.spots { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.spot { border-bottom: 1px solid var(--grid); scroll-margin-top: 120px; }
+.spot-toggle { width: 100%; text-align: left; border: 0; background: none; padding: 10px 0; cursor: pointer; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; align-items: center; }
+.spot-toggle .nm { font-weight: 600; font-size: 14px; }
+.spot-toggle .meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; font-size: 12px; color: var(--muted); }
+.spot-toggle .chev { font-family: var(--font-num); color: var(--faint); font-size: 14px; }
+.spot.open { background: linear-gradient(90deg, transparent, var(--surface-2) 30%); }
+.spot-detail { padding: 0 0 12px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+.facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; margin: 0; }
+.facts dt { color: var(--muted); font-size: 12px; padding-top: 1px; white-space: nowrap; }
+.facts dd { margin: 0; }
+.caution { margin: 0; font-size: 13px; color: var(--warn); }
+.spot-detail p { margin: 0; }
 
 /* 일정 */
-.days { display: flex; flex-direction: column; gap: 10px; }
-.day { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 12px; }
-.day .d { font-family: var(--font-num); font-weight: 600; }
-.day .d small { display: block; font-family: var(--font-ui); font-weight: 400; font-size: 12px; color: var(--muted); }
-.day ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.day li { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
-/* 숙소 */
-.island-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
-.island-head h3 { margin: 0; font-size: 17px; }
-.hotels { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; margin-top: 10px; }
-.hotel { display: flex; flex-direction: column; gap: 8px; }
-.hotel .nm { font-weight: 700; font-size: 15px; }
-.hotel .en { font-size: 12px; color: var(--muted); }
-.hotel .price-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; text-decoration: none; color: inherit; }
-.hotel .price-row b { font-family: var(--font-num); font-size: 18px; }
-.pc { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; }
-.pc ul { margin: 2px 0 0; padding-left: 16px; }
-.pc .k { font-size: 12px; font-weight: 600; }
-.srcs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
-.srcs .tk { font-size: 12px; color: var(--muted); }
-details summary { cursor: pointer; font-size: 12px; color: var(--muted); }
-select { font: inherit; font-size: 14px; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; max-width: 100%; }
-@media (max-width: 520px) { .pc { grid-template-columns: minmax(0, 1fr); } .hotels { grid-template-columns: minmax(0, 1fr); } }
-.route { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; }
-.route .stop { padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
-.route .stop small { color: var(--muted); margin-left: 4px; font-family: var(--font-num); }
-.steps { list-style: none; margin: 6px 0 0; padding: 0; counter-reset: st; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
-.steps li { counter-increment: st; display: flex; gap: 8px; align-items: baseline; }
-.steps li::before { content: counter(st); font-family: var(--font-num); font-size: 11px; color: var(--accent); background: var(--accent-soft); border-radius: 999px; min-width: 18px; text-align: center; }
-.spot { padding: 8px 0; border-bottom: 1px solid var(--grid); display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
-.spot:last-child { border-bottom: 0; }
-.spot .meta { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 2px 10px; }
-.day li .tm { font-family: var(--font-num); font-size: 12px; color: var(--muted); min-width: 40px; }
-@media (max-width: 520px) { .day { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.page { padding-top: 14px; display: flex; flex-direction: column; gap: 18px; }
+.page-title { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.page-title h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+.page-title span { color: var(--muted); font-size: 14px; }
+.days { list-style: none; margin: 0; padding: 0; max-width: 760px; }
+.day { display: grid; grid-template-columns: 74px 18px minmax(0, 1fr); gap: 0 10px; }
+.day .d { text-align: right; padding: 12px 0; }
+.day .d b { font-family: var(--font-num); font-weight: 600; font-size: 15px; display: block; }
+.day .d small { font-size: 12px; color: var(--muted); }
+.day .rail { position: relative; }
+.day .rail::before { content: ""; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--line); }
+.day:first-child .rail::before { top: 20px; } .day:last-child .rail::before { bottom: calc(100% - 20px); }
+.day .rail i { position: absolute; left: 3px; top: 15px; width: 12px; height: 12px; border-radius: 50%; background: var(--isl, var(--surface)); border: 2px solid var(--isl, var(--line)); }
+.day .rail i.split { background: linear-gradient(90deg, var(--isl-a) 0 50%, var(--isl-b) 50% 100%); border-color: var(--bg); }
+.day .ev { padding: 10px 0 14px; display: flex; flex-direction: column; gap: 6px; border-bottom: 1px solid var(--grid); min-width: 0; }
+.day:last-child .ev { border-bottom: 0; }
+.ev-row { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; font-size: 14px; }
+.ev-row .tm { font-family: var(--font-num); font-size: 12px; color: var(--muted); min-width: 38px; }
+.ev-row .pl { font-family: var(--font-num); font-size: 12px; color: var(--muted); letter-spacing: 0.04em; }
+.ev-row .sub { font-size: 12px; color: var(--muted); flex-basis: 100%; }
+.isl-link { text-decoration: none; }
+.isl-link:hover { text-decoration: underline; }
+.empty { color: var(--faint); font-size: 13px; }
+
+/* 비용 */
+.cost-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 760px) { .cost-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.cstat { display: flex; flex-direction: column; gap: 2px; padding: 12px 0; border-top: 2px solid var(--fg); }
+.cstat .k { font-size: 13px; color: var(--muted); }
+.cstat .v { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 20px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cstat .s { font-size: 12px; color: var(--muted); }
+.cat { display: flex; flex-direction: column; gap: 8px; }
+.cat h3 { font-size: 15px; font-weight: 700; color: var(--muted); }
+.items { list-style: none; margin: 0; padding: 0; background: var(--surface); border-radius: 14px; border: 1px solid var(--line); }
+.item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; padding: 14px; border-top: 1px solid var(--grid); }
+.item:first-child { border-top: 0; }
+.item .t { font-weight: 700; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.item .sub { font-size: 13px; color: var(--muted); }
+.item .amt { text-align: right; font-family: var(--font-num); font-weight: 600; white-space: nowrap; font-size: 16px; }
+.item .amt small { display: block; font-family: var(--font-ui); font-weight: 400; font-size: 12px; color: var(--muted); }
+.item ul { margin: 4px 0 0; padding-left: 16px; font-size: 13px; color: var(--muted); }
+.ref-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.ref-list li { display: flex; justify-content: space-between; gap: 12px; }
+.ref-list .num { white-space: nowrap; }
+.empty-cats { font-size: 13px; color: var(--muted); }
+
+/* 가격 시트 */
+dialog.sheet { overflow-y: auto; overscroll-behavior: contain; padding: 0; border: 0; background: var(--surface); color: var(--fg); width: 100%; max-width: 100%; max-height: 92vh; max-height: 92dvh; margin: auto 0 0; border-radius: 18px 18px 0 0; box-shadow: var(--shadow); }
+dialog.sheet::backdrop { background: var(--scrim); }
+@media (min-width: 760px) { dialog.sheet { width: min(780px, calc(100vw - 48px)); margin: auto; border-radius: 18px; max-height: 88vh; } }
+.sheet-in { padding: 0 max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 14px; }
+.sheet-head { position: sticky; top: 0; z-index: 2; background: var(--surface); padding: 14px 0 8px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: start; border-bottom: 1px solid var(--grid); }
+.sheet-head::before { content: ""; position: absolute; left: 50%; top: 6px; width: 36px; height: 4px; margin-left: -18px; border-radius: 2px; background: var(--line); }
+.sheet-head h2 { font-size: 17px; font-weight: 700; }
+.sheet-head .detail { font-size: 13px; color: var(--muted); }
+.x { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-size: 20px; line-height: 1; color: var(--muted); }
+.quote { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px 24px; }
+.price-big { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: clamp(32px, 9vw, 44px); font-weight: 600; line-height: 1.05; letter-spacing: -0.02em; }
+.price-big small { font-family: var(--font-ui); font-size: 0.38em; font-weight: 500; margin-left: 4px; color: var(--muted); }
+.delta { font-family: var(--font-num); font-size: 15px; font-weight: 600; }
+.small { font-size: 12px; color: var(--muted); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1px; background: var(--line); border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+@media (max-width: 759px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .stats > .stat:last-child:nth-child(odd) { grid-column: 1 / -1; } }
+.stat { background: var(--surface); padding: 10px 12px; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.stat .k { font-size: 12px; color: var(--muted); }
+.stat .v { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stat .s { font-size: 11px; color: var(--muted); }
+.chart-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: center; }
+.chart-head h3 { font-size: 14px; font-weight: 700; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { font-size: 13px; font-weight: 500; padding: 6px 11px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+.legend { font-size: 12px; min-height: 18px; display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--muted); }
+.legend b { color: var(--fg); font-family: var(--font-num); font-weight: 600; }
+.chart-box { position: relative; height: 280px; }
+@media (min-width: 760px) { .chart-box { height: 320px; } }
+#chart { position: absolute; inset: 0; }
+.chart-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px; color: var(--muted); background: var(--surface); font-size: 14px; }
+.chart-note { font-size: 12px; color: var(--muted); margin-top: -6px; }
+.log { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.log li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 2px 14px; padding: 9px 0; border-bottom: 1px solid var(--grid); font-size: 14px; align-items: baseline; }
+.log .p { font-family: var(--font-num); font-weight: 600; text-align: right; }
+.log .df { font-family: var(--font-num); font-size: 12px; text-align: right; min-width: 70px; }
+.log .src { grid-column: 1 / -1; font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 2px 6px; align-items: center; }
+.sel { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); }
+.sel select { font: inherit; font-size: 15px; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; max-width: 100%; }
+
+/* 데스크톱 홈 */
+@media (min-width: 900px) {
+  .home { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); column-gap: 40px; }
+  .home > .hero { grid-column: 1; grid-row: 1; }
+  .home > .sum-grid { grid-column: 2; grid-row: 1; align-self: end; }
+  .home > .journey { grid-column: 1 / -1; }
+  .stops { grid-template-columns: var(--stops-cols, repeat(auto-fit, minmax(0, 1fr))); align-items: stretch; }
+  .stop .stop-opts { flex: 1; }
+  .isle-mini { height: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
 </style>
 </head>
 <body>
 <div class="wrap">
   <section class="lock" id="lock">
     <form id="lock-form" autocomplete="off">
+      <div class="depth" aria-hidden="true"></div>
       <h1>Trip</h1>
       <label>비밀번호<input type="password" id="pw" autocomplete="current-password" required></label>
       <label class="check"><input type="checkbox" id="remember" checked>이 기기에서 기억</label>
@@ -172,115 +460,87 @@ select { font: inherit; font-size: 14px; color: var(--fg); background: var(--sur
       <div class="msg" id="lock-msg" role="status"></div>
     </form>
   </section>
-
-  <div id="app" hidden>
-    <div class="wrap">
-      <header class="head">
-        <div>
-          <h1 id="title"></h1>
-          <div class="meta" id="trip-meta"></div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <span class="chip" id="dday"></span>
-          <button class="btn-ghost" type="button" id="lock-btn">잠그기</button>
-        </div>
-      </header>
-      <nav class="tabs" aria-label="화면">
-        <a href="#overview" data-tab="overview">개요</a>
-        <a href="#prices" data-tab="prices">시세</a>
-        <a href="#costs" data-tab="costs">비용</a>
-        <a href="#stays" data-tab="stays">숙소</a>
-        <a href="#courses" data-tab="courses">코스</a>
-        <a href="#schedule" data-tab="schedule">일정</a>
-      </nav>
-
-      <section data-view="overview" class="wrap">
-        <div class="stats" id="ov-stats"></div>
-        <section class="panel">
-          <h2>항목별 비용</h2>
-          <div class="table-scroll">
-            <table>
-              <thead><tr><th>분류</th><th>항목</th><th>상태</th><th class="r">금액</th><th class="r">결제</th></tr></thead>
-              <tbody id="ov-rows"></tbody>
-              <tfoot id="ov-foot"></tfoot>
-            </table>
-          </div>
-        </section>
-        <div class="tracker-cards" id="ov-trackers"></div>
-      </section>
-
-      <section data-view="prices" class="wrap" hidden>
-        <label style="max-width:420px">추적 항목<select id="tracker-select"></select></label>
-        <div>
-          <div style="font-weight:600" id="pr-label"></div>
-          <div class="muted" style="font-size:13px" id="pr-detail"></div>
-        </div>
-        <section class="quote" aria-label="현재 최저가">
-          <div>
-            <div class="muted" style="font-size:12px" id="pr-quote-label">오늘의 최저가</div>
-            <div class="price-big" id="pr-now">—</div>
-          </div>
-          <div>
-            <div class="delta flat" id="pr-delta"></div>
-            <div class="muted" style="font-size:12px" id="pr-delta-sub">&nbsp;</div>
-          </div>
-        </section>
-        <div class="stats" id="pr-stats"></div>
-        <section class="panel" aria-label="가격 차트">
-          <div class="chart-head">
-            <h2>가격 추이</h2>
-            <div class="controls">
-              <div class="seg" role="group" aria-label="기간">
-                <button type="button" data-range="7">1주</button>
-                <button type="button" data-range="30">1개월</button>
-                <button type="button" data-range="90">3개월</button>
-                <button type="button" data-range="all" aria-pressed="true">전체</button>
-              </div>
-              <div class="seg" role="group" aria-label="차트 형태">
-                <button type="button" data-mode="line" aria-pressed="true">일별</button>
-                <button type="button" data-mode="candle">주봉</button>
-              </div>
-            </div>
-          </div>
-          <div class="legend" id="legend"></div>
-          <div class="chart-box">
-            <div id="chart"></div>
-            <div class="chart-empty" id="chart-empty">아직 가격 기록이 없어요. 매일 자동 수집이 돌면 쌓여요.</div>
-          </div>
-        </section>
-        <section class="panel">
-          <h2>기록</h2>
-          <div class="log table-scroll">
-            <table>
-              <thead><tr><th>날짜</th><th class="r">가격</th><th class="r">전일비</th><th>출처</th><th>메모</th></tr></thead>
-              <tbody id="pr-log"></tbody>
-            </table>
-          </div>
-        </section>
-      </section>
-
-      <section data-view="costs" class="wrap" hidden>
-        <div class="stats" id="co-stats"></div>
-        <div class="items" id="co-items"></div>
-      </section>
-
-      <section data-view="stays" class="wrap" hidden><div class="route" id="st-route"></div><div class="wrap" id="st-islands"></div></section>
-
-      <section data-view="courses" class="wrap" hidden><div class="route" id="cs-route"></div><div class="wrap" id="cs-islands"></div></section>
-
-      <section data-view="schedule" class="wrap" hidden>
-        <section class="panel"><div class="days" id="sc-days"></div></section>
-      </section>
-
-      <p class="foot" id="foot"></p>
-    </div>
-  </div>
 </div>
+
+<div id="app" hidden>
+  <header class="top">
+    <div class="wrap top-in">
+      <a class="brand" href="#home"><b id="title"></b><span class="num" id="dday-chip"></span></a>
+      <nav class="topnav" aria-label="화면">
+        <a href="#home" data-nav="home">홈</a>
+        <a href="#big-island" data-nav="island">섬</a>
+        <a href="#schedule" data-nav="schedule">일정</a>
+        <a href="#costs" data-nav="costs">비용</a>
+      </nav>
+      <button class="btn-ghost" type="button" id="lock-btn">잠그기</button>
+    </div>
+  </header>
+  <main class="wrap" id="view"></main>
+  <div class="wrap"><p class="foot" id="foot"></p></div>
+  <nav class="tabbar" aria-label="화면">
+    <a href="#home" data-nav="home"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/></svg>홈</a>
+    <a href="#big-island" data-nav="island"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18c2 0 2-1.5 4.5-1.5S10 18 12 18s2-1.5 4.5-1.5S19 18 21 18"/><path d="M7 15c1-4 4-7 7-7 2 0 3.5 1.5 4 3"/><path d="M12 8c-1-2-3-3-5-2"/></svg>섬</a>
+    <a href="#schedule" data-nav="schedule"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>일정</a>
+    <a href="#costs" data-nav="costs"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M16 15h2"/></svg>비용</a>
+  </nav>
+</div>
+
+<dialog class="sheet" id="sheet" aria-labelledby="sh-title">
+  <div class="sheet-in">
+    <header class="sheet-head">
+      <div>
+        <div class="eyebrow" id="sh-cat"></div>
+        <h2 id="sh-title"></h2>
+        <div class="detail" id="sh-detail"></div>
+      </div>
+      <button class="x" type="button" id="sh-close" aria-label="닫기">×</button>
+    </header>
+    <section class="quote" aria-label="현재 최저가">
+      <div>
+        <div class="small" id="pr-quote-label">오늘의 최저가</div>
+        <div class="price-big" id="pr-now">—</div>
+      </div>
+      <div>
+        <div class="delta flat" id="pr-delta"></div>
+        <div class="small" id="pr-delta-sub">&nbsp;</div>
+      </div>
+    </section>
+    <div class="stats" id="pr-stats"></div>
+    <div class="chart-head">
+      <h3>가격 추이</h3>
+      <div class="controls">
+        <div class="seg" role="group" aria-label="기간">
+          <button type="button" data-range="7">1주</button>
+          <button type="button" data-range="30">1개월</button>
+          <button type="button" data-range="90">3개월</button>
+          <button type="button" data-range="all" aria-pressed="true">전체</button>
+        </div>
+        <div class="seg" role="group" aria-label="차트 형태">
+          <button type="button" data-mode="line" aria-pressed="true">일별</button>
+          <button type="button" data-mode="candle">주봉</button>
+        </div>
+      </div>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="chart-box">
+      <div id="chart"></div>
+      <div class="chart-empty" id="chart-empty">아직 가격 기록이 없어요. 매일 자동 수집이 돌면 쌓여요.</div>
+    </div>
+    <div class="chart-note" id="chart-note"></div>
+    <div class="links" id="sh-links"></div>
+    <section>
+      <div class="chart-head" style="margin-bottom:6px"><h3>기록</h3></div>
+      <ol class="log" id="pr-log"></ol>
+    </section>
+    <label class="sel">다른 항목 보기<select id="tracker-select"></select></label>
+  </div>
+</dialog>
 
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>
 (() => {
   const STORE = 'trip-key-v1';
+  const FAV_STORE = 'trip-fav-v1';
   const $ = id => document.getElementById(id);
   const won = n => Math.round(n).toLocaleString('ko-KR');
   const manwon = n => (n / 10000).toLocaleString('ko-KR', { maximumFractionDigits: 1 }) + '만';
@@ -289,25 +549,53 @@ select { font: inherit; font-size: 14px; color: var(--fg); background: var(--sur
   const parseDay = s => new Date(s + 'T00:00:00');
   const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
   const dot = s => s.replace(/-/g, '.');
-  const withDow = s => dot(s) + ' (' + WEEK[parseDay(s).getDay()] + ')';
+  const md = s => dot(s.slice(5));
+  const dow = s => WEEK[parseDay(s).getDay()];
+  const withDow = s => dot(s) + ' (' + dow(s) + ')';
+  const mdDow = s => md(s) + ' (' + dow(s) + ')';
+  const daysBetween = (a, b) => Math.round((parseDay(b) - parseDay(a)) / 86400000);
 
   const CATEGORY = { flight: '항공', stay: '숙소', activity: '투어·액티비티', transport: '교통·렌터카', insurance: '보험', etc: '기타' };
   const CATEGORY_ORDER = ['flight', 'stay', 'activity', 'transport', 'insurance', 'etc'];
   const STATUS = { idea: ['후보', ''], tracking: ['시세 추적', 'warn'], booked: ['예약', 'on'], paid: ['결제 완료', 'on'], cancelled: ['취소', 'off'] };
+  const KIND = { sight: '명소', beach: '해변', activity: '액티비티', tour: '투어', food: '맛집', shopping: '쇼핑', view: '전망' };
+  const TIER = { luxury: '럭셔리', upper: '상급', mid: '중급' };
+  const SRC = { blog: '블로그', youtube: '유튜브', cafe: '카페', official: '공식', other: '기타' };
+  // 섬 표식: 띠·칩·차트 선에만 쓰는 색과 공항 코드
+  const ISLAND_META = {
+    'big-island': { code: 'KOA', en: 'Big Island', color: '--isl-big' },
+    maui: { code: 'OGG', en: 'Maui', color: '--isl-maui' },
+    kauai: { code: 'LIH', en: 'Kauai', color: '--isl-kauai' },
+    oahu: { code: 'HNL', en: 'Oahu', color: '--isl-oahu' },
+  };
+  const meta = key => ISLAND_META[key] || { code: '', en: key, color: '--accent' };
+  const islVar = key => '--isl: var(' + meta(key).color + ')';
 
   // 요소 생성: h('td', { className: 'r' }, '텍스트', 자식...)
   function h(tag, props, ...kids) {
     const el = document.createElement(tag);
     if (props) for (const [k, v] of Object.entries(props)) {
-      if (k === 'style') el.style.cssText = v; else if (k in el) el[k] = v; else el.setAttribute(k, v);
+      if (v === null || v === undefined || v === false) continue;
+      if (k === 'style') el.style.cssText = v; else if (k in el && !k.includes('-')) el[k] = v; else el.setAttribute(k, v);
     }
     for (const k of kids.flat(Infinity)) if (k !== null && k !== undefined && k !== false) el.append(k);
     return el;
   }
-  const badge = status => { const [t, c] = STATUS[status] || [status, '']; return h('span', { className: 'badge ' + c }, t); };
+  function s(tag, attrs, ...kids) {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (const [k, v] of Object.entries(attrs || {})) el.setAttribute(k, v);
+    for (const k of kids) if (k) el.append(k);
+    return el;
+  }
+  const fill = (el, ...kids) => el.replaceChildren(...kids.flat(Infinity).filter(k => k !== null && k !== undefined && k !== false));
+  const tag = (text, cls) => h('span', { className: 'tag ' + (cls || '') }, text);
+  const badge = status => { const [t, c] = STATUS[status] || [status, '']; return tag(t, c); };
+  const ext = (url, text, cls) => h('a', { href: url, target: '_blank', rel: 'noopener', className: cls || null }, text);
+  const trendCls = diff => diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat';
+  const arrow = diff => diff > 0 ? '▲ ' : diff < 0 ? '▼ ' : '– ';
 
   // ---------- 복호화 ----------
-  const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  const b64 = str => Uint8Array.from(atob(str), c => c.charCodeAt(0));
   const unb64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
   let enc = null;
 
@@ -359,9 +647,15 @@ select { font: inherit; font-size: 14px; color: var(--fg); background: var(--sur
   });
   $('lock-btn').addEventListener('click', () => { writeCache(null); location.reload(); });
 
+  // ---------- 찜 (이 기기에만 저장) ----------
+  let favs = new Set();
+  function readFavs() { try { const v = JSON.parse(localStorage.getItem(FAV_STORE) || '[]'); return new Set(Array.isArray(v) ? v : []); } catch (e) { return new Set(); } }
+  function writeFavs() { try { localStorage.setItem(FAV_STORE, JSON.stringify([...favs])); } catch (e) {} }
+
   // ---------- 데이터 계산 ----------
   let D = null;
-  let today = ymd(new Date());
+  const today = ymd(new Date());
+  let trackerById = new Map(), islandOfTracker = new Map();
 
   function quotesOf(trackerId) {
     // 하루 한 값: 직접 기록(manual)이 있으면 그 값, 없으면 자동값
@@ -373,11 +667,11 @@ select { font: inherit; font-size: 14px; color: var(--fg); background: var(--sur
     }
     return [...m.values()].sort((a, b) => a.date < b.date ? -1 : 1);
   }
-  function latest(trackerId) { const s = quotesOf(trackerId); return s[s.length - 1] || null; }
+  function latest(trackerId) { const sr = quotesOf(trackerId); return sr[sr.length - 1] || null; }
 
   // 항목 금액: 확정가 → 없으면 연결된 시세 × 수량(예상) → 없으면 미정
   function costOf(it) {
-    const paid = (it.payments || []).reduce((s, p) => s + p.amount, 0);
+    const paid = (it.payments || []).reduce((sum, p) => sum + p.amount, 0);
     if (it.status === 'cancelled') return { amount: 0, paid, kind: 'cancelled' };
     if (Number.isInteger(it.price)) return { amount: it.price, paid, kind: 'fixed' };
     if (it.tracker) {
@@ -402,82 +696,625 @@ select { font: inherit; font-size: 14px; color: var(--fg); background: var(--sur
     if (c.amount === null) return '미정';
     return (c.kind === 'estimate' ? '≈ ' : '') + won(c.amount);
   }
-  const stat = (k, v, s, cls) => h('div', { className: 'stat' }, h('span', { className: 'k' }, k), h('span', { className: 'v ' + (cls || '') }, v), s ? h('span', { className: 's' }, s) : null);
+  function deltaText(diff, base) {
+    const pct = base ? Math.abs(diff / base * 100).toFixed(1) : '0.0';
+    return arrow(diff) + won(Math.abs(diff)) + '원 (' + (diff > 0 ? '+' : diff < 0 ? '−' : '') + pct + '%)';
+  }
+  const activeTrackers = () => D.trackers.filter(t => t.active !== false);
+
+  // ---------- 섬 정보 ----------
+  const staysIslands = () => (D.stays && D.stays.islands) || [];
+  const courseIslands = () => (D.courses && D.courses.islands) || [];
+  function islandName(key) {
+    const a = staysIslands().find(i => i.key === key);
+    const b = courseIslands().find(i => i.island === key);
+    return (a && a.name) || (b && b.name) || key;
+  }
+  // 섬 순서: plan.order 를 도착일부터 박수만큼 이어 붙인다
+  function stops() {
+    const plan = D.plan;
+    if (!plan || !plan.order) return [];
+    const cur = parseDay(plan.arrival);
+    return plan.order.map((st, i) => {
+      const start = ymd(cur); cur.setDate(cur.getDate() + st.nights); const end = ymd(cur);
+      return { i, keys: [st.island, ...(st.alternatives || [])], nights: st.nights, start, end };
+    });
+  }
+  function islandKeys() {
+    const keys = stops().flatMap(st => st.keys);
+    for (const i of staysIslands()) if (!keys.includes(i.key)) keys.push(i.key);
+    for (const i of courseIslands()) if (!keys.includes(i.island)) keys.push(i.island);
+    return keys;
+  }
+  function stopOf(key) { return stops().find(st => st.keys.includes(key)) || null; }
+  function isle(key) {
+    const stay = staysIslands().find(i => i.key === key) || null;
+    const course = courseIslands().find(i => i.island === key) || null;
+    const st = stopOf(key);
+    const start = (stay && stay.start) || (st && st.start) || null;
+    const end = (stay && stay.end) || (st && st.end) || null;
+    const nights = start && end ? daysBetween(start, end) : (st ? st.nights : null);
+    const status = stay ? stay.status : (st && st.keys.length > 1 ? 'candidate' : 'confirmed');
+    return { key, name: islandName(key), m: meta(key), stay, course, stop: st, start, end, nights, status };
+  }
+  const dayNo = date => daysBetween(D.trip.start, date) + 1;
+
+  // 섬의 숙소 후보: 최신 1박가 오름차순, 가격 없는 곳은 뒤로
+  function hotelsOf(key) {
+    const isl = staysIslands().find(i => i.key === key);
+    if (!isl) return [];
+    return (isl.hotels || []).map(ht => {
+      const tr = ht.tracker ? trackerById.get(ht.tracker) || null : null;
+      const series = ht.tracker ? quotesOf(ht.tracker) : [];
+      const q = series[series.length - 1] || null;
+      const cs = ht.tracker && D.collectStatus ? D.collectStatus[ht.tracker] || null : null;
+      return { ht, tr, series, q, cs };
+    }).sort((a, b) => (a.q ? a.q.price : Infinity) - (b.q ? b.q.price : Infinity));
+  }
+  const usable = x => x.q && !(x.cs && x.cs.state === 'unavailable');
+  function csText(cs) {
+    if (!cs || cs.state === 'ok') return null;
+    if (cs.state === 'unavailable') return '이 날짜 빈방 없음' + (cs.message ? ' · ' + cs.message : '');
+    if (cs.state === 'large-room-only') return '2인 객실 없음, 큰 객실 가격';
+    return '최근 수집 실패';
+  }
+
+  // 숙소 참고 금액: 찜한 숙소(없으면 섬별 최저가) × 박수. 총액에는 넣지 않는다
+  function refBasis(parts) {
+    const n = parts.filter(p => p.fav).length;
+    return n === 0 ? '섬별 최저가' : n === parts.length ? '찜한 숙소' : '찜한 숙소(없는 섬은 최저가)';
+  }
+  function stayReference() {
+    let sum = 0; const parts = [];
+    for (const st of stops()) {
+      let pick = null;
+      for (const key of st.keys) {
+        const f = hotelsOf(key).filter(x => usable(x) && favs.has(x.ht.id));
+        if (f.length) { pick = { key, x: f[0], fav: true }; break; }
+      }
+      if (!pick) {
+        const all = hotelsOf(st.keys[0]).filter(usable);
+        if (all.length) pick = { key: st.keys[0], x: all[0], fav: false };
+      }
+      if (pick) {
+        const n = isle(pick.key).nights || st.nights;
+        pick.nights = n; pick.amount = pick.x.q.price * n;
+        sum += pick.amount; parts.push(pick);
+      }
+    }
+    return { sum, parts };
+  }
+
+  // ---------- 작은 그림 ----------
+  function spark(list, w, hh) {
+    w = w || 76; hh = hh || 24;
+    const pts = list.slice(-14);
+    if (!pts.length) return null;
+    const el = s('svg', { viewBox: '0 0 ' + w + ' ' + hh, class: 'spark', width: w, height: hh, 'aria-hidden': 'true', focusable: 'false' });
+    const pad = 3;
+    if (pts.length === 1) {
+      el.append(s('line', { x1: pad, y1: hh / 2, x2: w - pad, y2: hh / 2, class: 'base' }), s('circle', { cx: w - pad, cy: hh / 2, r: 2.8, class: 'end' }));
+      return el;
+    }
+    const vals = pts.map(q => q.price), mn = Math.min(...vals), mx = Math.max(...vals), span = (mx - mn) || 1;
+    const xy = pts.map((q, i) => [pad + i * (w - 2 * pad) / (pts.length - 1), mx === mn ? hh / 2 : pad + (mx - q.price) / span * (hh - 2 * pad)]);
+    const last = xy[xy.length - 1];
+    el.append(s('polyline', { points: xy.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' '), class: 'ln' }), s('circle', { cx: last[0].toFixed(1), cy: last[1].toFixed(1), r: 2.8, class: 'end' }));
+    return el;
+  }
+  function plumeria() {
+    const g = s('g', null);
+    for (let k = 0; k < 5; k++) g.append(s('ellipse', { cx: 12, cy: 6.6, rx: 3.3, ry: 5.2, transform: 'rotate(' + (k * 72) + ' 12 12)', class: 'pt' }));
+    return s('svg', { viewBox: '0 0 24 24', 'aria-hidden': 'true', focusable: 'false' }, g, s('circle', { cx: 12, cy: 12, r: 2.1, class: 'core' }));
+  }
+  function contour() {
+    const el = s('svg', { viewBox: '0 0 460 170', class: 'contour', 'aria-hidden': 'true', fill: 'none', stroke: 'currentColor', 'stroke-width': '1' });
+    const paths = ['M30 150 C90 110 120 60 210 52 C300 44 340 90 430 70', 'M60 160 C120 128 150 84 220 78 C300 70 340 112 440 98', 'M100 168 C150 146 180 112 230 106 C300 98 350 132 450 126', 'M150 170 C190 160 210 138 240 134 C300 128 360 152 460 150'];
+    for (const d of paths) el.append(s('path', { d }));
+    return el;
+  }
+  const PLANE = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13.5 21 7l-2.5 5.5L21 18 3 11.5"/><path d="M9 11.2 7 5h2.5l4 4.6"/></svg>';
+  const icon = markup => { const sp = h('span', { 'aria-hidden': 'true', style: 'display:inline-flex' }); sp.innerHTML = markup; return sp; };
+
+  function clampPara(text, cls) {
+    const p = h('p', { className: 'para clamp ' + (cls || '') }, text);
+    if (text.length < 110) { p.classList.remove('clamp'); return p; }
+    const b = h('button', { type: 'button', className: 'more', 'aria-expanded': 'false' }, '더 보기');
+    b.addEventListener('click', () => { const o = p.classList.toggle('open'); b.textContent = o ? '접기' : '더 보기'; b.setAttribute('aria-expanded', String(o)); });
+    return h('div', null, p, b);
+  }
+  function sourcesBlock(list, label) {
+    list = list || [];
+    if (!list.length) return null;
+    return h('details', { className: 'srcs-d' },
+      h('summary', null, (label || '후기') + ' ' + list.length + '개'),
+      h('ul', { className: 'srcs' }, list.map(src => h('li', null,
+        h('div', { className: 'src-line' },
+          tag(SRC[src.type] || src.type),
+          ext(src.url, src.title),
+          src.status === 'login-required' ? tag('카페 가입 필요', 'warn') : null,
+          src.status === 'unverified' ? tag('제목만 확인') : null,
+          src.publishedAt ? h('span', { className: 'date num' }, src.publishedAt) : null,
+        ),
+        src.takeaway ? h('p', { className: 'tk' }, src.takeaway) : null,
+      ))));
+  }
 
   // ---------- 머리 ----------
+  function ddayText() {
+    const d = daysBetween(today, D.trip.start);
+    if (d > 0) return 'D-' + d;
+    if (d === 0) return 'D-DAY';
+    return today <= D.trip.end ? dayNo(today) + '일차' : '다녀왔어요';
+  }
+  function ddaySub() {
+    const d = daysBetween(today, D.trip.start);
+    if (d > 0) return '출발까지';
+    if (d === 0) return '오늘 출발';
+    return today <= D.trip.end ? '여행 중' : null;
+  }
   function renderHead() {
     const t = D.trip;
     document.title = t.title || 'Trip';
     $('title').textContent = t.title || 'Trip';
-    const nights = Math.round((parseDay(t.end) - parseDay(t.start)) / 86400000);
-    $('trip-meta').replaceChildren(
-      h('span', null, withDow(t.start) + ' – ' + withDow(t.end)),
-      h('span', null, nights + '박 ' + (nights + 1) + '일'),
-      t.destination ? h('span', null, t.destination) : null,
-      h('span', null, t.travelers + '명'),
-    );
-    const d = Math.round((parseDay(t.start) - parseDay(today)) / 86400000);
-    $('dday').textContent = d > 0 ? 'D-' + d : d === 0 ? 'D-DAY' : '다녀왔어요';
-    $('foot').textContent = '데이터 기준 ' + D.builtAt.slice(0, 16).replace('T', ' ') + ' · 시세는 Google Flights 에서 매일 자동 수집한 값이라 실제 결제 화면과 다를 수 있어요. 오르면 빨강, 내리면 파랑.';
+    $('dday-chip').textContent = ddayText();
+    const upd = [D.stays && D.stays.updatedAt ? '숙소 조사 ' + dot(D.stays.updatedAt) : null, D.courses && D.courses.updatedAt ? '코스 조사 ' + dot(D.courses.updatedAt) : null].filter(Boolean).join(' · ');
+    $('foot').textContent = '데이터 기준 ' + D.builtAt.slice(0, 16).replace('T', ' ') + (upd ? ' · ' + upd : '') + ' · 시세는 Google 에서 매일 자동 수집한 값이라 실제 결제 화면과 다를 수 있어요. 오르면 빨강, 내리면 파랑. 찜은 이 기기에만 저장돼요.';
   }
 
-  // ---------- 개요 ----------
-  function renderOverview() {
+  // ---------- 홈 ----------
+  function chainStrip() {
+    const el = h('ul', { className: 'chain', 'aria-label': '섬 순서' });
+    for (const st of stops()) {
+      const when = [h('span', null, md(st.start) + '–' + st.end.slice(8)), h('span', null, st.nights + '박')];
+      if (st.keys.length > 1) {
+        const [a, b] = st.keys;
+        el.append(h('li', { className: 'seg-stop alt', style: '--isl-a: var(' + meta(a).color + '); --isl-b: var(' + meta(b).color + ')' },
+          h('a', { className: 'seg-link', href: '#' + a },
+            h('span', { className: 'code' }, st.keys.map(k => meta(k).code).join('/')),
+            h('span', { className: 'nm' }, st.keys.map(islandName).join(' / ')),
+            h('span', { className: 'dt' }, when))));
+      } else {
+        const k = st.keys[0];
+        el.append(h('li', { className: 'seg-stop', style: islVar(k) },
+          h('a', { className: 'seg-link', href: '#' + k },
+            h('span', { className: 'code' }, meta(k).code),
+            h('span', { className: 'nm' }, islandName(k)),
+            h('span', { className: 'dt' }, when))));
+      }
+    }
+    const plan = D.plan;
+    if (plan && plan.departure && plan.departure < D.trip.end) {
+      el.append(h('li', { className: 'seg-stop fly' },
+        h('span', { className: 'code' }, 'ICN'),
+        h('span', { className: 'nm' }, '귀국'),
+        h('span', { className: 'dt' }, h('span', null, md(plan.departure)))));
+    }
+    return el;
+  }
+  function moneyCard() {
     const t = totals();
     const budget = D.trip.budget;
-    $('ov-stats').replaceChildren(
-      stat('예상 총액', won(t.total) + '원', t.estimate ? '시세 기준 예상 ' + manwon(t.estimate) + ' 포함' : '확정가 합계'),
-      stat('결제 완료', won(t.paid) + '원', null, t.paid ? 'down' : ''),
-      stat('남은 결제', won(Math.max(t.total - t.paid, 0)) + '원', t.unknown ? '금액 미정 ' + t.unknown + '건 제외' : null),
-      budget ? stat('예산 대비', (budget - t.total >= 0 ? '' : '−') + won(Math.abs(budget - t.total)) + '원', '예산 ' + manwon(budget), budget - t.total >= 0 ? 'down' : 'up')
-             : stat('예산', '미설정', null, 'muted'),
+    const pct = t.total ? Math.min(100, t.paid / t.total * 100) : 0;
+    const ref = stayReference();
+    return h('section', { className: 'money', 'aria-label': '비용' },
+      h('div', { className: 'k' }, '예상 총액'),
+      h('div', { className: 'big' }, won(t.total), h('small', null, '원')),
+      h('div', { className: 'small' }, t.estimate ? '시세 기준 예상 ' + manwon(t.estimate) + ' 포함' : '확정가 합계'),
+      h('div', { className: 'progress', role: 'img', 'aria-label': '결제 진행 ' + Math.round(pct) + '%' }, h('i', { style: 'width:' + pct.toFixed(1) + '%' })),
+      h('div', { className: 'row' },
+        h('span', null, '결제 ', h('b', null, won(t.paid)), '원'),
+        h('span', null, '남은 ', h('b', null, won(Math.max(t.total - t.paid, 0))), '원'),
+      ),
+      h('div', { className: 'row' },
+        h('span', null, t.unknown ? '금액 미정 ' + t.unknown + '건' : '미정 항목 없음'),
+        h('span', null, budget ? '예산 ' + manwon(budget) + (budget - t.total >= 0 ? ' · ' + manwon(budget - t.total) + ' 여유' : ' · ' + manwon(t.total - budget) + ' 초과') : '예산 미설정'),
+      ),
+      ref.parts.length ? h('div', { className: 'ref' }, '숙소 참고 ', h('b', null, '≈ ' + manwon(ref.sum)), ' · ' + refBasis(ref.parts) + ' 기준, 총액엔 안 넣음') : null,
     );
-
-    const rows = [];
-    for (const cat of CATEGORY_ORDER) {
-      const list = D.items.filter(i => i.category === cat);
-      if (!list.length) {
-        rows.push(h('tr', null, h('td', null, CATEGORY[cat]), h('td', { className: 'muted', colSpan: 4 }, '아직 없음')));
-        continue;
-      }
-      list.forEach((it, i) => {
-        const c = costOf(it);
-        rows.push(h('tr', null,
-          h('td', null, i === 0 ? CATEGORY[cat] : ''),
-          h('td', null, it.title),
-          h('td', null, badge(it.status)),
-          h('td', { className: 'r num' }, amountText(c)),
-          h('td', { className: 'r num' }, c.paid ? won(c.paid) : '—'),
-        ));
-      });
-    }
-    $('ov-rows').replaceChildren(...rows);
-    $('ov-foot').replaceChildren(h('tr', null, h('td', { colSpan: 3 }, '합계'), h('td', { className: 'r num' }, won(t.total)), h('td', { className: 'r num' }, won(t.paid))));
-
-    const linked = new Set(D.items.filter(i => i.status !== 'cancelled').map(i => i.tracker).filter(Boolean));
-    $('ov-trackers').replaceChildren(...D.trackers.filter(tr => tr.active !== false && linked.has(tr.id)).map(tr => {
-      const s = quotesOf(tr.id);
-      const last = s[s.length - 1], prev = s[s.length - 2];
+  }
+  function flightTickets() {
+    return activeTrackers().filter(t => t.category === 'flight').map(tr => {
+      const sr = quotesOf(tr.id);
+      const last = sr[sr.length - 1], prev = sr[sr.length - 2];
       const diff = last && prev ? last.price - prev.price : null;
-      return h('a', { className: 'panel tcard', href: '#prices/' + tr.id },
-        h('h2', null, CATEGORY[tr.category] + ' 시세'),
-        h('div', { style: 'font-weight:600' }, tr.label),
-        h('div', { className: 'p' }, last ? won(last.price) + '원' : '—'),
-        h('div', { className: 'delta ' + (diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat'), style: 'font-size:13px' },
-          diff === null ? (last ? dot(last.date) + ' 기록' : '기록 없음') : deltaText(diff, prev.price) + ' · 전일 대비'),
-        h('div', { className: 'muted', style: 'font-size:12px' }, tr.unit || ''),
+      return h('a', { className: 'ticket', href: '#prices/' + tr.id, 'aria-label': tr.label + ' 가격 추이 보기' },
+        h('span', { className: 'tk-e' }, '항공 시세'),
+        h('span', { className: 'tk-r' }, tr.label),
+        h('span', { className: 'tk-s' }, [tr.unit, last ? dot(last.date) + ' 기준' : null].filter(Boolean).join(' · ')),
+        h('span', { className: 'tk-p' },
+          spark(sr, 96, 26),
+          h('b', null, last ? won(last.price) + '원' : '—'),
+          h('span', { className: 'd ' + (diff === null ? 'flat' : trendCls(diff)) }, diff === null ? (last ? '첫 기록' : '기록 없음') : arrow(diff) + won(Math.abs(diff)))),
       );
-    }));
+    });
+  }
+  function islandMini(key) {
+    const I = isle(key);
+    const hs = hotelsOf(key);
+    const cheapest = hs.find(usable);
+    const favH = hs.filter(x => favs.has(x.ht.id));
+    const c = I.course;
+    const spotsN = c ? c.areas.reduce((n, a) => n + a.spots.length, 0) : 0;
+    const dcs = (c && c.dayCourses) || [];
+    return h('a', { className: 'isle-mini', href: '#' + key, style: islVar(key) },
+      h('div', { className: 'top-line' }, h('span', { className: 'code' }, (I.m.code ? I.m.code + ' · ' : '') + I.m.en), tag(I.status === 'confirmed' ? '확정' : '후보', I.status === 'confirmed' ? 'on' : 'warn')),
+      h('h3', null, I.name),
+      hs.length ? h('div', { className: 'line' }, '숙소 ' + hs.length + '곳', cheapest ? [' · 최저 1박 ', h('b', null, manwon(cheapest.q.price))] : null) : null,
+      favH.length ? h('div', { className: 'fav-line' }, h('span', { className: 'fav-mark', 'aria-hidden': 'true' }, plumeria()), favH.map(x => x.ht.nameKo).join(', ')) : null,
+      c ? h('div', { className: 'line' }, '하루 코스 ' + dcs.length + ' · 스폿 ' + spotsN) : null,
+      dcs.length ? h('div', { className: 'courses-line' }, dcs.map(d => d.title).join(' / ')) : null,
+    );
+  }
+  function renderHome() {
+    const t = D.trip;
+    const nights = daysBetween(t.start, t.end);
+    const view = h('div', { className: 'home' },
+      h('section', { className: 'hero' },
+        contour(),
+        h('div', { className: 'eyebrow' }, (t.destination ? t.destination + ' · ' : '') + 'Hawaii ' + t.start.slice(0, 4)),
+        h('div', { className: 'hero-row' },
+          h('div', { className: 'dday' }, ddayText(), ddaySub() ? h('small', null, ddaySub()) : null),
+          h('div', null,
+            h('h1', null, t.title || 'Trip'),
+            h('div', { className: 'when' }, withDow(t.start) + ' – ' + mdDow(t.end)),
+            h('div', { className: 'when' }, nights + '박 ' + (nights + 1) + '일 · ' + t.travelers + '인'),
+          ),
+        ),
+        chainStrip(),
+        t.note ? h('p', { className: 'para' }, t.note) : null,
+      ),
+      h('div', { className: 'sum-grid' }, moneyCard(), flightTickets()),
+      h('section', { className: 'journey' },
+        h('div', { className: 'sec-title' }, h('h2', null, '섬별 여정'), h('span', null, '누르면 숙소·코스')),
+        h('div', { className: 'stops', style: '--stops-cols: ' + stops().map(st => 'minmax(0, ' + st.keys.length + 'fr)').join(' ') }, stops().map((st, i) => h('article', { className: 'stop' + (st.keys.length > 1 ? ' alt' : '') },
+          h('div', { className: 'stop-head' }, h('span', { className: 'n' }, String(i + 1).padStart(2, '0')), h('span', { className: 'num' }, mdDow(st.start) + ' · ' + st.nights + '박'), st.keys.length > 1 ? tag('둘 중 하나', 'warn') : null),
+          h('div', { className: 'stop-opts' }, st.keys.map(islandMini)),
+        ))),
+      ),
+    );
+    $('view').replaceChildren(view);
   }
 
-  // ---------- 시세 ----------
+  // ---------- 섬 화면 ----------
+  function favButton(ht) {
+    const b = h('button', { type: 'button', className: 'fav', 'aria-pressed': String(favs.has(ht.id)), 'aria-label': ht.nameKo + ' 찜', title: '찜' }, plumeria());
+    b.addEventListener('click', () => {
+      if (favs.has(ht.id)) favs.delete(ht.id); else favs.add(ht.id);
+      writeFavs();
+      b.setAttribute('aria-pressed', String(favs.has(ht.id)));
+    });
+    return b;
+  }
+  function splitSrc(text) {
+    const m = String(text).match(/^(.*\S)\s*\(([^()]{1,60})\)\s*$/);
+    return m ? [m[1], m[2]] : [text, null];
+  }
+  function pcList(label, arr, cls) {
+    arr = arr || [];
+    if (!arr.length) return null;
+    const ul = h('ul', null, arr.map((t, i) => { const [main, src] = splitSrc(t); return h('li', { hidden: i >= 3 }, main, src ? h('span', { className: 'src-tag' }, src) : null); }));
+    const more = arr.length > 3 ? h('button', { type: 'button', className: 'more' }, (arr.length - 3) + '개 더 보기') : null;
+    if (more) more.addEventListener('click', () => { ul.querySelectorAll('li[hidden]').forEach(li => { li.hidden = false; }); more.remove(); });
+    return h('div', { className: cls }, h('h5', null, label, h('span', { className: 'cnt' }, arr.length)), ul, more);
+  }
+  function stayRow(x, I, max) {
+    const { ht, tr, series, q, cs } = x;
+    const did = 'sd-' + ht.id;
+    const prev = series[series.length - 2];
+    const diff = q && prev ? q.price - prev.price : null;
+    const li = h('li', { className: 'stay', id: 'stay-' + ht.id });
+    const toggle = h('button', { type: 'button', className: 'stay-toggle', 'aria-expanded': 'false', 'aria-controls': did },
+      h('span', { className: 'stay-name' }, ht.nameKo),
+      h('span', { className: 'stay-sub' }, [TIER[ht.tier] || ht.tier, ht.adultsOnlyOrQuiet ? '조용함' : null, ht.area].filter(Boolean).join(' · ')),
+    );
+    const priceKids = q
+      ? [h('b', null, won(q.price)), h('span', { className: 'per' }, '1박'), I.nights ? h('span', { className: 'tot' }, I.nights + '박 ' + manwon(q.price * I.nights)) : null]
+      : [h('span', { className: 'per' }, '가격 수집 전')];
+    const price = tr ? h('a', { className: 'stay-price', href: '#prices/' + tr.id, 'aria-label': ht.nameKo + ' 가격 추이' }, priceKids) : h('div', { className: 'stay-price' }, priceKids);
+    const meter = q ? h('div', { className: 'stay-meter' },
+      h('div', { className: 'bar', 'aria-hidden': 'true' }, h('i', { style: 'width:' + (max ? Math.max(4, q.price / max * 100) : 0).toFixed(1) + '%' })),
+      spark(series),
+      h('span', { className: 'delta-s ' + (diff === null ? 'flat' : trendCls(diff)) }, diff === null ? '첫 기록 ' + md(q.date) : arrow(diff) + won(Math.abs(diff))),
+    ) : null;
+    const csMsg = csText(cs);
+    const detail = h('div', { className: 'stay-detail', id: did, hidden: true },
+      ht.nameEn ? h('div', { className: 'small' }, ht.nameEn) : null,
+      ht.whyHoneymoon ? h('p', { className: 'why' }, ht.whyHoneymoon) : null,
+      h('div', { className: 'pc' }, pcList('장점', ht.pros, 'good'), pcList('단점', ht.cons, 'bad')),
+      ht.priceNote ? h('p', { className: 'note' }, h('b', null, '후기 속 가격 '), ht.priceNote) : null,
+      h('div', { className: 'links' },
+        tr ? h('a', { className: 'pill', href: '#prices/' + tr.id }, '가격 추이') : null,
+        ht.officialUrl ? ext(ht.officialUrl, '공식 사이트', 'pill') : null,
+        ht.googleUrl ? ext(ht.googleUrl, 'Google 호텔', 'pill') : (tr && tr.url ? ext(tr.url, 'Google 호텔', 'pill') : null),
+      ),
+      sourcesBlock(ht.sources, '후기'),
+    );
+    toggle.addEventListener('click', () => {
+      const o = toggle.getAttribute('aria-expanded') !== 'true';
+      toggle.setAttribute('aria-expanded', String(o));
+      detail.hidden = !o; li.classList.toggle('open', o);
+    });
+    fill(li, h('div', { className: 'stay-top' }, favButton(ht), toggle, price), meter,
+      csMsg ? h('div', { className: 'cs-note' }, tag(dot(cs.date) + ' ' + csMsg, 'warn')) : null, detail);
+    return li;
+  }
+  function islandNav(active) {
+    const nav = h('nav', { className: 'inav', 'aria-label': '섬 바꾸기' });
+    const all = stops();
+    const listed = new Set(all.flatMap(st => st.keys));
+    all.forEach((st, i) => {
+      if (i) nav.append(h('span', { className: 'inav-arrow', 'aria-hidden': 'true' }, '→'));
+      nav.append(h('div', { className: 'inav-grp', role: st.keys.length > 1 ? 'group' : null, 'aria-label': st.keys.length > 1 ? '같은 날 후보' : null },
+        st.keys.map(k => h('a', { href: '#' + k, style: islVar(k), 'aria-current': k === active ? 'page' : null }, h('i', { 'aria-hidden': 'true' }), islandName(k)))));
+    });
+    const extra = islandKeys().filter(k => !listed.has(k));
+    if (extra.length) nav.append(h('div', { className: 'inav-grp' }, extra.map(k => h('a', { href: '#' + k, style: islVar(k), 'aria-current': k === active ? 'page' : null }, h('i', { 'aria-hidden': 'true' }), islandName(k)))));
+    return nav;
+  }
+  function reservationTag(r) {
+    if (!r || /^불필요/.test(r)) return null;
+    if (/필수/.test(r)) return '예약 필수';
+    if (/권장/.test(r)) return '예약 권장';
+    if (/예약\s*필요/.test(r)) return '예약 필요';
+    return null;
+  }
+  function spotRow(sp) {
+    const did = 'spd-' + sp.id;
+    const li = h('li', { className: 'spot', id: 'spot-' + sp.id });
+    const rt = reservationTag(sp.reservation);
+    const toggle = h('button', { type: 'button', className: 'spot-toggle', 'aria-expanded': 'false', 'aria-controls': did },
+      h('span', { className: 'nm' }, sp.name),
+      h('span', { className: 'chev', 'aria-hidden': 'true' }, '+'),
+      h('span', { className: 'meta' }, tag(KIND[sp.kind] || sp.kind), rt ? tag(rt, 'warn') : null, sp.duration ? h('span', null, sp.duration) : null),
+    );
+    const back = h('button', { type: 'button', className: 'more back', hidden: true }, '← 코스로');
+    const facts = [['영문', sp.nameEn], ['좋은 시간', sp.bestTime], ['비용', sp.cost], ['예약', sp.reservation]].filter(f => f[1]);
+    const detail = h('div', { className: 'spot-detail', id: did, hidden: true },
+      facts.length ? h('dl', { className: 'facts' }, facts.map(([k, v]) => [h('dt', null, k), h('dd', null, v)])) : null,
+      sp.honeymoonTip ? h('p', null, sp.honeymoonTip) : null,
+      (sp.cautions || []).length ? h('p', { className: 'caution' }, '주의: ' + sp.cautions.join(' · ')) : null,
+      sourcesBlock(sp.sources, '출처'),
+      back,
+    );
+    const set = o => { toggle.setAttribute('aria-expanded', String(o)); detail.hidden = !o; li.classList.toggle('open', o); toggle.querySelector('.chev').textContent = o ? '−' : '+'; };
+    toggle.addEventListener('click', () => set(toggle.getAttribute('aria-expanded') !== 'true'));
+    back.addEventListener('click', () => {
+      const id = back.dataset.course;
+      const card = id ? $('course-' + id) : null;
+      if (!card) return;
+      card.scrollIntoView({ block: 'start' });
+      const b = card.querySelector('.step-spot[data-spot="' + sp.id + '"]') || card.querySelector('button');
+      if (b) b.focus({ preventScroll: true });
+    });
+    li._open = courseId => {
+      set(true);
+      back.hidden = !courseId;
+      if (courseId) back.dataset.course = courseId;
+    };
+    fill(li, toggle, detail);
+    return li;
+  }
+  function openSpot(id, courseId) {
+    const li = $('spot-' + id);
+    if (!li) return;
+    if (li._open) li._open(courseId);
+    li.scrollIntoView({ block: 'start' });
+    const b = li.querySelector('button'); if (b) b.focus({ preventScroll: true });
+  }
+  function courseCard(c, spotById, areaByKey) {
+    const area = areaByKey.get(c.area);
+    return h('article', { className: 'course', id: 'course-' + c.id },
+      h('div', { className: 'course-head' }, h('h4', null, c.title), tag(c.length === 'full' ? '하루' : '반나절')),
+      area ? h('div', { className: 'course-area' }, area.name) : null,
+      h('ol', { className: 'tl' }, (c.steps || []).map(stp => {
+        const sp = spotById.get(stp.spot);
+        // 칸에는 짧은 시각만, 긴 설명('02:00 전후 출발')은 본문 위로
+        const time = String(stp.time || '');
+        const tm = /^(\d{1,2}:\d{2})\s*(.*)$/.exec(time);
+        const short = time.length <= 5 ? time : tm ? tm[1] : '';
+        const rest = time.length <= 5 ? '' : tm ? tm[2] : time;
+        return h('li', null,
+          h('span', { className: 'tm num' }, short),
+          h('div', { className: 'tl-body' },
+            rest ? h('span', { className: 'tl-when' }, rest) : null,
+            sp ? h('button', { type: 'button', className: 'step-spot', 'data-spot': sp.id, 'data-course': c.id }, sp.name) : h('span', null, stp.spot),
+            stp.note ? h('span', { className: 'tl-note' }, stp.note) : null));
+      })),
+      c.tip ? h('p', { className: 'tip' }, c.tip) : null,
+      sourcesBlock(c.sources, '출처'),
+    );
+  }
+  function renderIsland(key) {
+    const I = isle(key);
+    const hs = hotelsOf(key);
+    const max = Math.max(0, ...hs.filter(x => x.q).map(x => x.q.price));
+    const c = I.course;
+    const spotById = new Map(c ? c.areas.flatMap(a => a.spots).map(sp => [sp.id, sp]) : []);
+    const areaByKey = new Map(c ? c.areas.map(a => [a.key, a]) : []);
+    const dcs = (c && c.dayCourses) || [];
+    const spotsN = c ? c.areas.reduce((n, a) => n + a.spots.length, 0) : 0;
+
+    // 그 섬에서 보내는 밤과 그날 일정
+    const nightsList = [];
+    if (I.start && I.end) for (let d = parseDay(I.start); ymd(d) < I.end; d.setDate(d.getDate() + 1)) nightsList.push(ymd(d));
+    const lastStop = stops().slice(-1)[0];
+    const isLast = lastStop && lastStop.keys.includes(key);
+    const evs = (D.schedule || []).filter(ev => I.start && ev.date >= I.start && (ev.date < I.end || (isLast && ev.date === I.end)));
+    const st = I.stop;
+    const others = st ? st.keys.filter(k => k !== key) : [];
+    const cheapest = hs.find(usable);
+
+    const head = h('section', { className: 'isle-head' },
+      h('div', { style: 'display:flex;justify-content:space-between;gap:8px;align-items:center' },
+        h('span', { className: 'eyebrow' }, (I.m.code ? I.m.code + ' · ' : '') + I.m.en),
+        tag(I.status === 'confirmed' ? '확정' : '후보', I.status === 'confirmed' ? 'on' : 'warn')),
+      h('h2', null, I.name),
+      I.start ? h('div', { className: 'when' }, h('b', null, mdDow(I.start) + ' – ' + mdDow(I.end)), ' · ' + I.nights + '박', I.stay && I.stay.datesNote ? ' · ' + I.stay.datesNote : null) : null,
+      nightsList.length ? h('div', { className: 'nights' }, nightsList.map(d => h('span', { className: 'night' }, h('b', null, dayNo(d) + '일차'), mdDow(d)))) : null,
+      evs.length ? h('div', { className: 'evs' }, evs.map(ev => h('div', null, icon(PLANE), h('span', { className: 'num muted' }, md(ev.date) + (ev.time ? ' ' + ev.time : '')), h('span', null, ev.title), ev.place ? h('span', { className: 'num muted' }, ev.place) : null))) : null,
+      others.length ? h('div', { className: 'alt-note' }, '같은 날 후보', others.map(k => {
+        const oc = hotelsOf(k).find(usable);
+        return h('a', { href: '#' + k }, islandName(k) + (oc ? ' · 최저 1박 ' + manwon(oc.q.price) : ''));
+      }), cheapest ? h('span', null, '· 여기 최저 1박 ' + manwon(cheapest.q.price)) : null) : null,
+      I.stay && I.stay.summary ? clampPara(I.stay.summary) : null,
+      h('div', { className: 'jump' },
+        hs.length ? jumpBtn('sec-stays', '숙소 ' + hs.length) : null,
+        dcs.length ? jumpBtn('sec-courses', '하루 코스 ' + dcs.length) : null,
+        spotsN ? jumpBtn('sec-areas', '스폿 ' + spotsN) : null),
+    );
+
+    const staysBlk = h('section', { className: 'blk', id: 'sec-stays' },
+      h('div', { className: 'blk-head' }, h('h3', null, '숙소 후보'), h('span', null, hs.length ? '낮은 가격 순 · 1박 2인, 세금 포함 · 꽃은 찜' : '')),
+      hs.length ? h('ol', { className: 'stays' }, hs.map(x => stayRow(x, I, max))) : h('p', { className: 'empty' }, '아직 숙소 후보가 없어요.'));
+    const coursesBlk = h('section', { className: 'blk', id: 'sec-courses' },
+      h('div', { className: 'blk-head' }, h('h3', null, '하루 코스'), h('span', null, dcs.length ? '장소를 누르면 정보' : '')),
+      dcs.length ? h('div', { className: 'courses' }, dcs.map(dc => courseCard(dc, spotById, areaByKey))) : h('p', { className: 'empty' }, '아직 코스가 없어요.'));
+    const areasBlk = c ? h('section', { className: 'blk', id: 'sec-areas' },
+      h('div', { className: 'blk-head' }, h('h3', null, '지역별 스폿'), h('span', null, c.areas.length + '개 지역')),
+      h('div', { className: 'areas' }, c.areas.map(a => h('section', { className: 'area' },
+        h('h4', null, a.name, h('span', { className: 'cnt' }, a.spots.length)),
+        a.summary ? clampPara(a.summary) : null,
+        h('ul', { className: 'spots' }, a.spots.map(spotRow)))))) : null;
+
+    const root = h('div', { className: 'isle', style: islVar(key) },
+      islandNav(key), head, h('div', { className: 'isle-grid' }, staysBlk, coursesBlk), areasBlk);
+    root.addEventListener('click', e => {
+      const b = e.target.closest('.step-spot');
+      if (b) openSpot(b.dataset.spot, b.dataset.course);
+    });
+    $('view').replaceChildren(root);
+  }
+  function jumpBtn(id, text) {
+    const b = h('button', { type: 'button', className: 'pill' }, text);
+    b.addEventListener('click', () => { const el = $(id); if (el) el.scrollIntoView({ block: 'start' }); });
+    return b;
+  }
+
+  // ---------- 일정 ----------
+  function renderSchedule() {
+    const t = D.trip;
+    const itemById = new Map(D.items.map(i => [i.id, i]));
+    const cIsl = courseIslands();
+    const courseById = new Map(cIsl.flatMap(i => (i.dayCourses || []).map(c => [c.id, { c, island: i.island }])));
+    const spotById = new Map(cIsl.flatMap(i => i.areas || []).flatMap(a => a.spots).map(sp => [sp.id, sp]));
+    const days = [];
+    for (let d = parseDay(t.start); d <= parseDay(t.end); d.setDate(d.getDate() + 1)) days.push({ date: ymd(d), n: dayNo(ymd(d)) });
+    // 여행 기간 밖 일정(예: 사전 준비)도 앞뒤에 붙인다
+    const outside = [...new Set(D.schedule.map(x => x.date).filter(x => x < t.start || x > t.end))].map(date => ({ date, n: null }));
+    const all = [...outside, ...days].sort((a, b) => a.date < b.date ? -1 : 1);
+
+    const list = h('ol', { className: 'days' }, all.map(({ date, n }) => {
+      const rows = [];
+      // 섬 일정: 그 섬에 묵는 밤마다 표시 (후보 섬은 '?' 표시)
+      const nightIslands = staysIslands().filter(isl => isl.start && isl.end && date >= isl.start && date < isl.end);
+      if (nightIslands.length) rows.push(h('div', { className: 'ev-row' }, nightIslands.map(isl =>
+        h('a', { href: '#' + isl.key, className: 'tag isl isl-link', style: islVar(isl.key) }, isl.name + (isl.status === 'confirmed' ? '' : ' ?')))));
+      for (const ev of D.schedule.filter(x => x.date === date)) {
+        const it = ev.item ? itemById.get(ev.item) : null;
+        const co = ev.course ? courseById.get(ev.course) : null;
+        rows.push(h('div', { className: 'ev-row' },
+          ev.time ? h('span', { className: 'tm' }, ev.time) : null,
+          it && it.category === 'flight' ? icon(PLANE) : null,
+          h('span', null, ev.title),
+          ev.place ? h('span', { className: 'pl' }, ev.place) : null,
+          it ? tag(CATEGORY[it.category] || it.category) : null,
+          co ? h('a', { href: '#' + co.island, className: 'tag on isl-link', 'data-course': co.c.id }, '코스 ' + co.c.title) : null,
+          ev.note ? h('span', { className: 'sub' }, ev.note) : null,
+          co ? h('span', { className: 'sub' }, (co.c.steps || []).map(stp => (spotById.get(stp.spot) || {}).name || stp.spot).join(' → ')) : null,
+        ));
+      }
+      // 숙소: 체크인 날부터 체크아웃 전날까지 그 밤의 숙소를 보여 준다
+      for (const it of D.items) {
+        if (it.category !== 'stay' || it.status === 'cancelled' || !it.start || !it.end) continue;
+        if (date >= it.start && date < it.end) rows.push(h('div', { className: 'ev-row' }, h('span', { className: 'tm' }, '숙박'), h('span', null, it.title), badge(it.status)));
+      }
+      const iv = nightIslands.length === 1 ? islVar(nightIslands[0].key) : '';
+      const dotEl = nightIslands.length > 1
+        ? h('i', { className: 'split', style: '--isl-a: var(' + meta(nightIslands[0].key).color + '); --isl-b: var(' + meta(nightIslands[1].key).color + ')' })
+        : h('i', { style: iv || null });
+      return h('li', { className: 'day' },
+        h('div', { className: 'd' }, h('b', null, md(date) + ' ' + dow(date)), h('small', null, n ? n + '일차' : '여행 전후')),
+        h('div', { className: 'rail', 'aria-hidden': 'true' }, dotEl),
+        h('div', { className: 'ev' }, rows.length ? rows : h('span', { className: 'empty' }, '비어 있음')),
+      );
+    }));
+    list.addEventListener('click', e => { const a = e.target.closest('[data-course]'); if (a) pendingScroll = 'course-' + a.dataset.course; });
+    const nights = daysBetween(t.start, t.end);
+    $('view').replaceChildren(h('div', { className: 'page' },
+      h('div', { className: 'page-title' }, h('h2', null, '일정'), h('span', null, withDow(t.start) + ' – ' + mdDow(t.end) + ' · ' + nights + '박 ' + (nights + 1) + '일')),
+      chainStrip(),
+      list));
+  }
+
+  // ---------- 비용 ----------
+  function renderCosts() {
+    const t = totals();
+    const cs = (k, v, sub, cls) => h('div', { className: 'cstat' }, h('span', { className: 'k' }, k), h('span', { className: 'v ' + (cls || '') }, v), sub ? h('span', { className: 's' }, sub) : null);
+    const pct = t.total ? Math.min(100, t.paid / t.total * 100) : 0;
+    const blocks = [];
+    const empty = [];
+    for (const cat of CATEGORY_ORDER) {
+      const list = D.items.filter(i => i.category === cat);
+      if (!list.length) { empty.push(CATEGORY[cat]); continue; }
+      blocks.push(h('section', { className: 'cat' }, h('h3', null, CATEGORY[cat]), h('ul', { className: 'items' }, list.map(it => {
+        const c = costOf(it);
+        const when = it.start ? (withDow(it.start) + (it.end && it.end !== it.start ? ' – ' + mdDow(it.end) : '')) : '';
+        const sub = [when, it.vendor, it.quantity && it.quantity > 1 ? it.quantity + '인' : ''].filter(Boolean).join(' · ');
+        const pays = it.payments || [];
+        return h('li', { className: 'item' },
+          h('div', null,
+            h('div', { className: 't' }, it.title, badge(it.status)),
+            sub ? h('div', { className: 'sub' }, sub) : null,
+            c.kind === 'estimate' ? h('div', { className: 'sub' }, md(c.quote.date) + ' 시세 ' + won(c.quote.price) + '원 × ' + (it.quantity || 1) + ' · ', h('a', { href: '#prices/' + it.tracker }, '시세 보기')) : null,
+            it.note ? h('div', { className: 'sub' }, it.note) : null,
+            it.url ? h('div', { className: 'sub' }, ext(it.url, '링크')) : null,
+            pays.length ? h('ul', null, pays.map(p => h('li', null, dot(p.date) + ' · ' + won(p.amount) + '원' + (p.note ? ' · ' + p.note : '')))) : null,
+          ),
+          h('div', { className: 'amt' }, amountText(c), c.amount !== null && c.kind !== 'cancelled' ? h('small', null, c.paid >= c.amount && c.amount ? '완납' : '남은 ' + won(Math.max(c.amount - c.paid, 0))) : null),
+        );
+      }))));
+    }
+    const ref = stayReference();
+    $('view').replaceChildren(h('div', { className: 'page' },
+      h('div', { className: 'page-title' }, h('h2', null, '비용'), h('span', null, '2인 기준')),
+      h('div', { className: 'cost-stats' },
+        cs('예상 총액', won(t.total) + '원', t.estimate ? '시세 기준 예상 포함' : '확정가 합계'),
+        cs('확정 금액', won(t.fixed) + '원'),
+        cs('결제 완료', won(t.paid) + '원', '남은 ' + won(Math.max(t.total - t.paid, 0)) + '원', t.paid ? 'down' : ''),
+        cs('금액 미정', t.unknown + '건', D.trip.budget ? '예산 ' + manwon(D.trip.budget) : '예산 미설정'),
+      ),
+      h('div', { className: 'progress', role: 'img', 'aria-label': '결제 진행 ' + Math.round(pct) + '%' }, h('i', { style: 'width:' + pct.toFixed(1) + '%' })),
+      blocks,
+      empty.length ? h('p', { className: 'empty-cats' }, '아직 항목 없음: ' + empty.join(' · ')) : null,
+      ref.parts.length ? h('section', { className: 'cat' },
+        h('h3', null, '숙소 참고 금액'),
+        h('div', { className: 'money' },
+          h('div', { className: 'small' }, refBasis(ref.parts) + ' × 박수. 예약 전이라 총액에는 넣지 않았어요.'),
+          h('ul', { className: 'ref-list' }, ref.parts.map(p => h('li', null,
+            h('span', null, h('span', { className: 'tag isl', style: islVar(p.key) }, islandName(p.key)), ' ', p.x.ht.nameKo, p.fav ? ' (찜)' : ' (최저)'),
+            h('span', { className: 'num' }, p.nights + '박 ' + won(p.amount))))),
+          h('div', { className: 'row' }, h('span', null, '합계'), h('b', null, won(ref.sum) + '원')),
+        )) : null,
+    ));
+  }
+
+  // ---------- 가격 시트 ----------
+  const sheet = $('sheet');
   let curTracker = null, range = 'all', mode = 'line';
   let chart = null, series = null;
   const hasLib = typeof LightweightCharts !== 'undefined';
 
-  function deltaText(diff, base) {
-    const pct = base ? Math.abs(diff / base * 100).toFixed(1) : '0.0';
-    return (diff > 0 ? '▲ ' : diff < 0 ? '▼ ' : '– ') + won(Math.abs(diff)) + '원 (' + (diff > 0 ? '+' : diff < 0 ? '−' : '') + pct + '%)';
+  function hexToRgba(hex, a) {
+    const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex || '');
+    if (!m) return hex;
+    let v = m[1]; if (v.length === 3) v = v.split('').map(ch => ch + ch).join('');
+    const n = parseInt(v, 16);
+    return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+  }
+  function trackerColor(tr) {
+    const k = islandOfTracker.get(tr.id);
+    return css(k ? meta(k).color : '--accent');
   }
   function chartTheme() {
     return {
@@ -490,7 +1327,7 @@ select { font: inherit; font-size: 14px; color: var(--fg); background: var(--sur
   function ensureChart() {
     if (chart || !hasLib) return;
     chart = LightweightCharts.createChart($('chart'), Object.assign({
-      autoSize: true, localization: { locale: 'ko-KR', priceFormatter: p => manwon(p), dateFormat: 'yyyy.MM.dd' },
+      autoSize: true, handleScroll: { vertTouchDrag: false }, localization: { locale: 'ko-KR', priceFormatter: p => manwon(p), dateFormat: 'yyyy.MM.dd' },
     }, chartTheme()));
     chart.subscribeCrosshairMove(p => renderLegend(p && p.time ? p.time : null));
   }
@@ -509,21 +1346,23 @@ select { font: inherit; font-size: 14px; color: var(--fg); background: var(--sur
   function renderChart() {
     const list = quotesOf(curTracker.id);
     $('chart-empty').hidden = list.length > 0;
+    $('chart-note').textContent = list.length === 1 ? '아직 하루치 기록이라 점 하나로 보여요. 매일 쌓이면 선이 돼요.' : '';
     if (!hasLib) { if (list.length) { $('chart-empty').hidden = false; $('chart-empty').textContent = '차트 라이브러리를 불러오지 못했어요'; } return; }
     ensureChart();
     if (series) { chart.removeSeries(series); series = null; }
+    const color = trackerColor(curTracker);
     if (mode === 'candle') {
       series = chart.addCandlestickSeries({ upColor: css('--up'), downColor: css('--down'), borderVisible: false, wickUpColor: css('--up'), wickDownColor: css('--down') });
       series.setData(weekly(list));
     } else {
-      series = chart.addAreaSeries({ lineColor: css('--accent'), lineWidth: 2, topColor: css('--accent-soft'), bottomColor: 'rgba(0,0,0,0)', crosshairMarkerRadius: 4 });
+      series = chart.addAreaSeries({ lineColor: color, lineWidth: 2, topColor: hexToRgba(color, 0.18), bottomColor: hexToRgba(color, 0), crosshairMarkerRadius: 4, pointMarkersVisible: list.length < 3 });
       series.setData(list.map(q => ({ time: q.date, value: q.price })));
     }
     if (curTracker.targetPrice) series.createPriceLine({ price: curTracker.targetPrice, color: css('--target'), lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: '목표가' });
     applyRange();
   }
   function applyRange() {
-    if (!chart || !quotesOf(curTracker.id).length) return;
+    if (!chart || !curTracker || !quotesOf(curTracker.id).length) return;
     if (range === 'all') { chart.timeScale().fitContent(); return; }
     const from = new Date(); from.setDate(from.getDate() - Number(range));
     try { chart.timeScale().setVisibleRange({ from: ymd(from), to: today }); } catch (e) { chart.timeScale().fitContent(); }
@@ -532,28 +1371,26 @@ select { font: inherit; font-size: 14px; color: var(--fg); background: var(--sur
     const list = quotesOf(curTracker.id);
     const q = time ? list.find(x => x.date === (typeof time === 'string' ? time : ymd(new Date(time.year, time.month - 1, time.day)))) : list[list.length - 1];
     if (!q) { $('legend').replaceChildren(); return; }
-    $('legend').replaceChildren(h('span', null, withDow(q.date)), h('span', null, h('b', null, won(q.price)), '원'), q.note ? h('span', null, q.note) : null);
+    fill($('legend'), h('span', null, withDow(q.date)), h('span', null, h('b', null, won(q.price)), '원'), q.note ? h('span', null, q.note) : null);
   }
-  function renderPrices() {
-    const active = D.trackers.filter(t => t.active !== false);
-    if (!curTracker || !active.includes(curTracker)) curTracker = active[0] || null;
-    if (!curTracker) { $('pr-label').textContent = '추적 중인 항목이 없어요.'; return; }
-    const sel = $('tracker-select');
-    sel.parentElement.hidden = active.length < 2;
-    sel.replaceChildren(...CATEGORY_ORDER.filter(c => active.some(t => t.category === c)).map(c =>
-      h('optgroup', { label: CATEGORY[c] }, active.filter(t => t.category === c).map(t => h('option', { value: t.id, selected: t === curTracker }, t.label)))));
-    sel.onchange = () => { location.hash = '#prices/' + sel.value; };
-    $('pr-label').replaceChildren(curTracker.label + ' ', curTracker.url ? h('a', { href: curTracker.url, target: '_blank', rel: 'noopener', style: 'font-size:12px;font-weight:400' }, 'Google 에서 보기') : null);
-    $('pr-detail').textContent = [curTracker.detail, curTracker.unit].filter(Boolean).join(' · ');
+  const stat = (k, v, sub, cls) => h('div', { className: 'stat' }, h('span', { className: 'k' }, k), h('span', { className: 'v ' + (cls || '') }, v), sub ? h('span', { className: 's' }, sub) : null);
 
-    const list = quotesOf(curTracker.id);
+  function fillSheet() {
+    const tr = curTracker;
+    const islKey = islandOfTracker.get(tr.id);
+    sheet.style.cssText = islKey ? islVar(islKey) : '';
+    $('sh-cat').textContent = CATEGORY[tr.category] + ' 시세' + (islKey ? ' · ' + islandName(islKey) : '');
+    $('sh-title').textContent = tr.label;
+    $('sh-detail').textContent = [tr.detail, tr.unit].filter(Boolean).join(' · ');
+
+    const list = quotesOf(tr.id);
     const last = list[list.length - 1], prev = list[list.length - 2];
     $('pr-now').replaceChildren(last ? won(last.price) : '—', h('small', null, '원'));
     $('pr-quote-label').textContent = !last ? '최저가' : last.date === today ? '오늘의 최저가' : dot(last.date) + ' 최저가';
     const dEl = $('pr-delta');
     if (last && prev) {
       const diff = last.price - prev.price;
-      dEl.className = 'delta ' + (diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat');
+      dEl.className = 'delta ' + trendCls(diff);
       dEl.textContent = deltaText(diff, prev.price);
       $('pr-delta-sub').textContent = '직전 기록일 ' + dot(prev.date) + ' 대비';
     } else { dEl.className = 'delta flat'; dEl.textContent = last ? '비교할 전일 기록 없음' : '기록을 기다리는 중'; $('pr-delta-sub').textContent = ' '; }
@@ -561,32 +1398,59 @@ select { font: inherit; font-size: 14px; color: var(--fg); background: var(--sur
     const vals = list.map(q => q.price);
     const min = vals.length ? Math.min(...vals) : null, max = vals.length ? Math.max(...vals) : null;
     const minQ = list.find(q => q.price === min), maxQ = list.find(q => q.price === max);
-    const tp = curTracker.targetPrice;
+    const tp = tr.targetPrice;
     const fromMin = last && min !== null ? last.price - min : null;
-    $('pr-stats').replaceChildren(
+    const nights = tr.category === 'stay' && islKey ? isle(islKey).nights || tr.nights : null;
+    fill($('pr-stats'),
       stat('기간 최저', min !== null ? won(min) : '—', minQ ? dot(minQ.date) : null),
       stat('기간 최고', max !== null ? won(max) : '—', maxQ ? dot(maxQ.date) : null),
       stat('최저 대비', fromMin === null ? '—' : fromMin === 0 ? '최저가' : '+' + won(fromMin), null, fromMin === 0 ? 'down' : fromMin ? 'up' : ''),
       stat('목표가', tp ? won(tp) : '미설정', tp && last ? (last.price <= tp ? '도달' : manwon(last.price - tp) + ' 남음') : null, tp ? (last && last.price <= tp ? 'down' : '') : 'muted'),
+      nights && last ? stat(nights + '박 합계', manwon(last.price * nights), '1박 × ' + nights) : null,
       stat('기록한 날', list.length + '일', list.length ? dot(list[0].date) + '부터' : null),
     );
-
+    const cs = D.collectStatus ? D.collectStatus[tr.id] : null;
+    const csMsg = csText(cs);
+    fill($('sh-links'),
+      csMsg ? tag(dot(cs.date) + ' ' + csMsg, 'warn') : null,
+      tr.url ? ext(tr.url, 'Google 에서 보기', 'pill') : null,
+      islKey && tr.category === 'stay' ? h('a', { className: 'pill', href: '#' + islKey, 'data-close': '1' }, islandName(islKey) + ' 숙소 비교') : null,
+    );
     const rows = [];
     for (let i = list.length - 1; i >= 0; i--) {
       const q = list[i], p = list[i - 1];
       const diff = p ? q.price - p.price : null;
-      rows.push(h('tr', null,
-        h('td', { className: 'num', style: 'white-space:nowrap' }, withDow(q.date)),
-        h('td', { className: 'r num' }, won(q.price)),
-        h('td', { className: 'r num ' + (diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat') }, diff === null ? '—' : (diff > 0 ? '▲ ' : diff < 0 ? '▼ ' : '– ') + won(Math.abs(diff))),
-        h('td', { style: 'white-space:nowrap' }, h('span', { className: 'badge ' + (q.kind === 'auto' ? 'on' : '') }, q.kind === 'auto' ? '자동' : '직접'), ' ', q.source || ''),
-        h('td', { className: 'muted', style: 'font-size:12px' }, q.note || ''),
+      rows.push(h('li', null,
+        h('span', { className: 'num' }, withDow(q.date)),
+        h('span', { className: 'p' }, won(q.price)),
+        h('span', { className: 'df ' + (diff === null ? 'flat' : trendCls(diff)) }, diff === null ? '—' : arrow(diff) + won(Math.abs(diff))),
+        h('span', { className: 'src' }, tag(q.kind === 'auto' ? '자동' : '직접', q.kind === 'auto' ? 'on' : ''), q.source || '', q.note ? ' · ' + q.note : ''),
       ));
     }
-    $('pr-log').replaceChildren(...(rows.length ? rows : [h('tr', null, h('td', { colSpan: 5, className: 'muted' }, '아직 없어요.'))]));
-    renderChart();
-    renderLegend(null);
+    $('pr-log').replaceChildren(...(rows.length ? rows : [h('li', null, h('span', { className: 'muted' }, '아직 없어요.'))]));
+
+    // 다른 항목: 분류별, 숙소는 섬별로 묶는다
+    const sel = $('tracker-select');
+    const act = activeTrackers();
+    const groups = [];
+    for (const cat of CATEGORY_ORDER) {
+      const inCat = act.filter(x => x.category === cat);
+      if (!inCat.length) continue;
+      if (cat === 'stay') {
+        for (const k of islandKeys()) {
+          const g = inCat.filter(x => islandOfTracker.get(x.id) === k);
+          if (g.length) groups.push([CATEGORY[cat] + ' · ' + islandName(k), g]);
+        }
+        const rest = inCat.filter(x => !islandOfTracker.has(x.id));
+        if (rest.length) groups.push([CATEGORY[cat], rest]);
+      } else groups.push([CATEGORY[cat], inCat]);
+    }
+    sel.replaceChildren(...groups.map(([label, g]) => h('optgroup', { label }, g.map(x => h('option', { value: x.id, selected: x === tr }, x.label)))));
+    sel.parentElement.hidden = act.length < 2;
+
   }
+  $('tracker-select').addEventListener('change', e => { location.replace('#prices/' + e.target.value); });
+  $('sh-links').addEventListener('click', e => { if (e.target.closest('[data-close]')) { sheetPushed = false; closingByRoute = true; sheet.close(); } });
   document.querySelectorAll('[data-range]').forEach(b => b.addEventListener('click', () => {
     range = b.dataset.range;
     document.querySelectorAll('[data-range]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
@@ -598,240 +1462,85 @@ select { font: inherit; font-size: 14px; color: var(--fg); background: var(--sur
     renderChart();
   }));
 
-  // ---------- 비용 ----------
-  function renderCosts() {
-    const t = totals();
-    $('co-stats').replaceChildren(
-      stat('확정 금액', won(t.fixed) + '원'),
-      stat('시세 기준 예상', won(t.estimate) + '원', '예약 전 항목'),
-      stat('결제 완료', won(t.paid) + '원', null, t.paid ? 'down' : ''),
-      stat('금액 미정', t.unknown + '건'),
-    );
-    const blocks = [];
-    for (const cat of CATEGORY_ORDER) {
-      const list = D.items.filter(i => i.category === cat);
-      const panel = h('section', { className: 'panel' }, h('h2', null, CATEGORY[cat]));
-      if (!list.length) { panel.append(h('div', { className: 'empty-note' }, '아직 없음')); blocks.push(panel); continue; }
-      for (const it of list) {
-        const c = costOf(it);
-        const when = it.start ? (withDow(it.start) + (it.end && it.end !== it.start ? ' – ' + withDow(it.end) : '')) : '';
-        const sub = [when, it.vendor, it.quantity && it.quantity > 1 ? it.quantity + '명' : ''].filter(Boolean).join(' · ');
-        const pays = (it.payments || []);
-        panel.append(h('div', { className: 'item', style: 'margin-top:10px' },
-          h('div', null,
-            h('div', { className: 't' }, it.title, badge(it.status)),
-            sub ? h('div', { className: 'sub' }, sub) : null,
-            c.kind === 'estimate' ? h('div', { className: 'sub' }, dot(c.quote.date) + ' 시세 ' + won(c.quote.price) + '원 × ' + (it.quantity || 1)) : null,
-            it.note ? h('div', { className: 'sub' }, it.note) : null,
-            it.url ? h('div', { className: 'sub' }, h('a', { href: it.url, target: '_blank', rel: 'noopener' }, '링크')) : null,
-            pays.length ? h('ul', null, pays.map(p => h('li', null, dot(p.date) + ' · ' + won(p.amount) + '원' + (p.note ? ' · ' + p.note : '')))) : null,
-          ),
-          h('div', { className: 'amt' }, amountText(c), c.amount !== null && c.kind !== 'cancelled' ? h('div', { className: 'sub', style: 'font-weight:400' }, c.paid >= c.amount && c.amount ? '완납' : '남은 ' + won(Math.max(c.amount - c.paid, 0))) : null),
-        ));
-      }
-      blocks.push(panel);
+  let sheetPushed = false, closingByRoute = false;
+  function openSheet(tr) {
+    curTracker = tr;
+    fillSheet();
+    if (!sheet.open) {
+      try { sheet.showModal(); } catch (e) { sheet.setAttribute('open', ''); }
+      document.documentElement.classList.add('lock-scroll');
+      sheet.scrollTop = 0;
     }
-    $('co-items').replaceChildren(...blocks);
+    renderChart(); renderLegend(null);
   }
+  $('sh-close').addEventListener('click', () => sheet.close());
+  sheet.addEventListener('click', e => { if (e.target === sheet) sheet.close(); });
+  sheet.addEventListener('close', () => {
+    document.documentElement.classList.remove('lock-scroll');
+    if (closingByRoute) { closingByRoute = false; return; }
+    if (sheetPushed) { sheetPushed = false; history.back(); }
+    else history.replaceState(null, '', '#' + (curView || 'home'));
+  });
 
-  // ---------- 섬 순서 ----------
-  function islandName(key) {
-    const a = ((D.stays && D.stays.islands) || []).find(i => i.key === key);
-    const b = ((D.courses && D.courses.islands) || []).find(i => i.island === key);
-    return (a && a.name) || (b && b.name) || key;
-  }
-  function renderRoute(el) {
-    const plan = D.plan;
-    if (!plan) { el.replaceChildren(); return; }
-    let cur = parseDay(plan.arrival);
-    const parts = [h('span', { className: 'muted' }, '순서')];
-    plan.order.forEach((st, i) => {
-      const start = ymd(cur); cur.setDate(cur.getDate() + st.nights); const end = ymd(cur);
-      if (i) parts.push(h('span', { className: 'muted' }, '→'));
-      const names = [st.island, ...(st.alternatives || [])].map(islandName).join(' / ');
-      parts.push(h('span', { className: 'stop' }, names, h('small', null, dot(start.slice(5)) + '–' + dot(end.slice(5)) + ' ' + st.nights + '박')));
+  // ---------- 화면 전환 ----------
+  let curView = null, lastIsland = null, pendingScroll = null;
+  function baseOf(tr) { return islandOfTracker.get(tr.id) || 'home'; }
+  function showView(name) {
+    const isl = islandKeys();
+    if (!['home', 'schedule', 'costs', ...isl].includes(name)) name = 'home';
+    if (name !== curView) {
+      curView = name;
+      if (isl.includes(name)) { lastIsland = name; renderIsland(name); }
+      else if (name === 'schedule') renderSchedule();
+      else if (name === 'costs') renderCosts();
+      else renderHome();
+      if (pendingScroll && $(pendingScroll)) { const el = $(pendingScroll); requestAnimationFrame(() => el.scrollIntoView({ block: 'start' })); }
+      else { try { window.scrollTo({ top: 0, behavior: 'instant' }); } catch (e) { window.scrollTo(0, 0); } }
+      pendingScroll = null;
+    }
+    const islandHref = '#' + (lastIsland || isl[0] || 'home');
+    document.querySelectorAll('[data-nav]').forEach(a => {
+      const key = a.dataset.nav;
+      if (key === 'island') a.setAttribute('href', islandHref);
+      const on = key === 'island' ? isl.includes(curView) : key === curView;
+      if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
-    el.replaceChildren(...parts);
   }
-  function planOrder() {
-    const keys = [];
-    for (const st of (D.plan && D.plan.order) || []) keys.push(st.island, ...(st.alternatives || []));
-    return keys;
-  }
-
-  // ---------- 코스 ----------
-  const KIND = { sight: '명소', beach: '해변', activity: '액티비티', tour: '투어', food: '맛집', shopping: '쇼핑', view: '전망' };
-  function renderCourses() {
-    renderRoute($('cs-route'));
-    const order = planOrder();
-    const list = [...((D.courses && D.courses.islands) || [])].sort((a, b) => {
-      const x = order.indexOf(a.island), y = order.indexOf(b.island);
-      return (x < 0 ? 99 : x) - (y < 0 ? 99 : y);
-    });
-    if (!list.length) { $('cs-islands').replaceChildren(h('div', { className: 'empty-note' }, '아직 코스가 없어요.')); return; }
-    const stayIsl = new Map(((D.stays && D.stays.islands) || []).map(i => [i.key, i]));
-    $('cs-islands').replaceChildren(...list.map(isl => {
-      const spots = new Map(isl.areas.flatMap(a => a.spots).map(sp => [sp.id, sp]));
-      const st = stayIsl.get(isl.island);
-      return h('section', { className: 'wrap', style: 'gap:8px' },
-        h('div', { className: 'island-head' },
-          h('h3', null, isl.name || islandName(isl.island)),
-          st && st.start ? h('span', { className: 'muted', style: 'font-size:13px' }, withDow(st.start) + ' – ' + withDow(st.end)) : null,
-          st ? h('span', { className: 'badge ' + (st.status === 'confirmed' ? 'on' : 'warn') }, st.status === 'confirmed' ? '확정' : '후보') : null,
-        ),
-        (isl.dayCourses || []).length ? h('div', { className: 'hotels' }, isl.dayCourses.map(c => h('article', { className: 'panel' },
-          h('div', { style: 'font-weight:700' }, c.title, ' ', h('span', { className: 'badge' }, c.length === 'full' ? '하루' : '반나절')),
-          h('ol', { className: 'steps' }, c.steps.map(stp => {
-            const sp = spots.get(stp.spot);
-            return h('li', null, h('span', null, stp.time ? h('span', { className: 'num muted' }, stp.time + ' ') : null, sp ? sp.name : stp.spot, stp.note ? h('span', { className: 'muted', style: 'font-size:12px' }, ' · ' + stp.note) : null));
-          })),
-          c.tip ? h('div', { className: 'muted', style: 'font-size:12px;margin-top:6px' }, c.tip) : null,
-          (c.sources || []).length ? h('div', { style: 'font-size:12px;margin-top:4px' }, c.sources.map((src, k) => [k ? ' · ' : '', h('a', { href: src.url, target: '_blank', rel: 'noopener' }, (SRC[src.type] || src.type))])) : null,
-        ))) : null,
-        h('div', { className: 'hotels' }, isl.areas.map(a => h('section', { className: 'panel' },
-          h('h2', null, a.name),
-          a.summary ? h('div', { className: 'muted', style: 'font-size:12px;margin-top:2px' }, a.summary) : null,
-          a.spots.map(sp => h('div', { className: 'spot' },
-            h('div', null, h('b', null, sp.name), ' ', h('span', { className: 'badge' }, KIND[sp.kind] || sp.kind), sp.reservation ? h('span', { className: 'badge warn', style: 'margin-left:4px' }, '예약') : null),
-            h('div', { className: 'meta' }, [sp.duration, sp.bestTime, sp.cost].filter(Boolean).map(x => h('span', null, x))),
-            sp.reservation ? h('div', { className: 'meta' }, '예약: ' + sp.reservation) : null,
-            sp.honeymoonTip ? h('div', null, sp.honeymoonTip) : null,
-            (sp.cautions || []).length ? h('div', { className: 'meta' }, '주의: ' + sp.cautions.join(' · ')) : null,
-            (sp.sources || []).length ? h('div', { className: 'meta' }, sp.sources.map(src => h('a', { href: src.url, target: '_blank', rel: 'noopener', title: src.takeaway || '' }, (SRC[src.type] || src.type) + ' ' + src.title.slice(0, 28)))) : null,
-          )),
-        ))),
-      );
-    }));
-  }
-
-  // ---------- 숙소 ----------
-  const TIER = { luxury: '럭셔리', upper: '상급', mid: '중급' };
-  const SRC = { blog: '블로그', youtube: '유튜브', cafe: '카페', official: '공식', other: '기타' };
-  function renderStays() {
-    renderRoute($('st-route'));
-    const islands = (D.stays && D.stays.islands) || [];
-    if (!islands.length) { $('st-islands').replaceChildren(h('div', { className: 'empty-note' }, '아직 숙소 후보가 없어요.')); return; }
-    const trackerById = new Map(D.trackers.map(t => [t.id, t]));
-    $('st-islands').replaceChildren(...islands.map(isl => {
-      const nights = isl.start && isl.end ? Math.round((parseDay(isl.end) - parseDay(isl.start)) / 86400000) : null;
-      const hotels = [...(isl.hotels || [])].map(ht => ({ ht, q: ht.tracker ? latest(ht.tracker) : null }))
-        .sort((a, b) => (a.q ? a.q.price : Infinity) - (b.q ? b.q.price : Infinity));
-      return h('section', { className: 'wrap', style: 'gap:8px' },
-        h('div', { className: 'island-head' },
-          h('h3', null, isl.name),
-          h('span', { className: 'badge ' + (isl.status === 'confirmed' ? 'on' : 'warn') }, isl.status === 'confirmed' ? '확정' : '후보'),
-          isl.start ? h('span', { className: 'muted', style: 'font-size:13px' }, withDow(isl.start) + ' – ' + withDow(isl.end) + (nights ? ' · ' + nights + '박' : '') + (isl.datesNote ? ' · ' + isl.datesNote : '')) : null,
-        ),
-        isl.summary ? h('div', { className: 'muted', style: 'font-size:13px' }, isl.summary) : null,
-        h('div', { className: 'hotels' }, hotels.map(({ ht, q }) => {
-          const tr = ht.tracker ? trackerById.get(ht.tracker) : null;
-          const s = ht.tracker ? quotesOf(ht.tracker) : [];
-          const prev = s[s.length - 2];
-          const diff = q && prev ? q.price - prev.price : null;
-          return h('article', { className: 'panel hotel' },
-            h('div', null,
-              h('div', { className: 'nm' }, ht.nameKo, ' ', h('span', { className: 'badge' }, TIER[ht.tier] || ht.tier), ht.adultsOnlyOrQuiet ? h('span', { className: 'badge', style: 'margin-left:4px' }, '조용함') : null),
-              h('div', { className: 'en' }, [ht.nameEn, ht.area].filter(Boolean).join(' · ')),
-            ),
-            tr ? h('a', { className: 'price-row', href: '#prices/' + tr.id },
-              q ? h('b', null, won(q.price) + '원') : h('span', { className: 'muted' }, '가격 수집 전'),
-              q ? h('span', { className: 'muted', style: 'font-size:12px' }, '1박 최저' + (nights ? ' · ' + nights + '박 ≈ ' + manwon(q.price * nights) : '')) : null,
-              diff !== null ? h('span', { className: 'delta ' + (diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat'), style: 'font-size:12px' }, (diff > 0 ? '▲ ' : diff < 0 ? '▼ ' : '– ') + won(Math.abs(diff))) : null,
-            ) : null,
-            (() => {
-              const cs = ht.tracker && D.collectStatus ? D.collectStatus[ht.tracker] : null;
-              if (!cs || cs.state === 'ok') return null;
-              const msg = cs.state === 'unavailable' ? '이 날짜 빈방 없음' + (cs.message ? ' · ' + cs.message : '')
-                : cs.state === 'large-room-only' ? '2인 객실 없음, 큰 객실 가격' : '최근 수집 실패';
-              return h('div', { className: 'badge warn', style: 'white-space:normal' }, dot(cs.date) + ' ' + msg);
-            })(),
-            ht.whyHoneymoon ? h('div', { style: 'font-size:13px' }, ht.whyHoneymoon) : null,
-            h('div', { className: 'pc' },
-              h('div', null, h('div', { className: 'k down' }, '장점'), h('ul', null, (ht.pros || []).map(x => h('li', null, x)))),
-              h('div', null, h('div', { className: 'k up' }, '단점'), h('ul', null, (ht.cons || []).map(x => h('li', null, x)))),
-            ),
-            ht.priceNote ? h('div', { className: 'muted', style: 'font-size:12px' }, '후기 속 가격: ' + ht.priceNote) : null,
-            h('details', null,
-              h('summary', null, '후기 ' + (ht.sources || []).length + '개' + (ht.officialUrl ? ' · 공식 사이트' : '')),
-              h('ul', { className: 'srcs', style: 'margin-top:6px' },
-                ht.officialUrl ? h('li', null, h('a', { href: ht.officialUrl, target: '_blank', rel: 'noopener' }, '공식 사이트')) : null,
-                (ht.sources || []).map(src => h('li', null,
-                  h('span', { className: 'badge' }, SRC[src.type] || src.type), ' ',
-                  h('a', { href: src.url, target: '_blank', rel: 'noopener' }, src.title),
-                  src.status === 'login-required' ? h('span', { className: 'badge', style: 'margin-left:4px' }, '카페 가입 필요') : null,
-                  src.status === 'unverified' ? h('span', { className: 'badge', style: 'margin-left:4px' }, '제목만 확인') : null,
-                  src.publishedAt ? h('span', { className: 'muted', style: 'font-size:12px' }, ' ' + src.publishedAt) : null,
-                  src.takeaway ? h('div', { className: 'tk' }, src.takeaway) : null,
-                )),
-              ),
-            ),
-          );
-        })),
-      );
-    }));
-  }
-
-  // ---------- 일정 ----------
-  function renderSchedule() {
-    const t = D.trip;
-    const itemById = new Map(D.items.map(i => [i.id, i]));
-    const cIsl = (D.courses && D.courses.islands) || [];
-    const courseById = new Map(cIsl.flatMap(i => i.dayCourses || []).map(c => [c.id, c]));
-    const spotById = new Map(cIsl.flatMap(i => i.areas || []).flatMap(a => a.spots).map(sp => [sp.id, sp]));
-    const days = [];
-    for (let d = parseDay(t.start), n = 1; d <= parseDay(t.end); d.setDate(d.getDate() + 1), n++) days.push({ date: ymd(d), n });
-    // 여행 기간 밖 일정(예: 사전 준비)도 앞뒤에 붙인다
-    const outside = [...new Set(D.schedule.map(s => s.date).filter(x => x < t.start || x > t.end))].map(date => ({ date, n: null }));
-    const all = [...outside, ...days].sort((a, b) => a.date < b.date ? -1 : 1);
-
-    $('sc-days').replaceChildren(...all.map(({ date, n }) => {
-      const events = D.schedule.filter(s => s.date === date).map(s => h('li', null,
-        s.time ? h('span', { className: 'tm' }, s.time) : null,
-        h('span', null, s.title),
-        s.place ? h('span', { className: 'muted', style: 'font-size:12px' }, s.place) : null,
-        s.item && itemById.get(s.item) ? h('span', { className: 'badge' }, CATEGORY[itemById.get(s.item).category]) : null,
-        s.note ? h('span', { className: 'muted', style: 'font-size:12px' }, s.note) : null,
-        s.course && courseById.get(s.course) ? h('a', { href: '#courses', className: 'badge on', style: 'text-decoration:none' }, '코스') : null,
-        s.course && courseById.get(s.course) ? h('div', { className: 'muted', style: 'font-size:12px;flex-basis:100%' }, courseById.get(s.course).steps.map(st => (spotById.get(st.spot) || {}).name || st.spot).join(' → ')) : null,
-      ));
-      // 숙소: 체크인 날부터 체크아웃 전날까지 그 밤의 숙소를 보여 준다
-      for (const it of D.items) {
-        if (it.category !== 'stay' || it.status === 'cancelled' || !it.start || !it.end) continue;
-        if (date >= it.start && date < it.end) events.push(h('li', null, h('span', { className: 'tm' }, '숙박'), h('span', null, it.title), badge(it.status)));
-      }
-      // 섬 일정: 그 섬에 묵는 밤마다 표시 (후보 섬은 '?' 표시)
-      const nightIslands = ((D.stays && D.stays.islands) || []).filter(isl => isl.start && isl.end && date >= isl.start && date < isl.end);
-      if (nightIslands.length) events.unshift(h('li', null, h('span', { className: 'tm' }, '섬'),
-        h('span', null, nightIslands.map(isl => isl.name + (isl.status === 'confirmed' ? '' : ' ?')).join(' / '))));
-      return h('div', { className: 'day' },
-        h('div', { className: 'd' }, dot(date.slice(5)) + ' ' + WEEK[parseDay(date).getDay()], h('small', null, n ? n + '일차' : '여행 전후')),
-        events.length ? h('ul', null, events) : h('div', { className: 'muted' }, '비어 있음'),
-      );
-    }));
-  }
-
-  // ---------- 탭 ----------
-  function route() {
-    const [tab, arg] = (location.hash.slice(1) || 'overview').split('/');
-    const name = ['overview', 'prices', 'costs', 'stays', 'courses', 'schedule'].includes(tab) ? tab : 'overview';
-    document.querySelectorAll('[data-tab]').forEach(a => a.dataset.tab === name ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
-    document.querySelectorAll('[data-view]').forEach(v => { v.hidden = v.dataset.view !== name; });
+  function route(fromHashChange) {
+    let raw = location.hash.slice(1);
+    try { raw = decodeURIComponent(raw); } catch (e) {}
+    let [name, arg] = raw.split('/');
+    name = name || 'home';
+    if (name === 'overview') name = 'home';
+    if (name === 'stays' || name === 'courses') name = lastIsland || islandKeys()[0] || 'home';
     if (name === 'prices') {
-      if (arg) curTracker = D.trackers.find(t => t.id === arg) || curTracker;
-      renderPrices();
+      const tr = (arg && trackerById.get(arg)) || activeTrackers()[0];
+      if (tr) {
+        if (!sheet.open) sheetPushed = !!(fromHashChange && curView);
+        if (!curView) showView(baseOf(tr));
+        openSheet(tr);
+        return;
+      }
+      name = 'home';
     }
+    if (sheet.open) { closingByRoute = true; sheetPushed = false; sheet.close(); }
+    showView(name);
   }
-  window.addEventListener('hashchange', () => D && route());
+  window.addEventListener('hashchange', () => D && route(true));
 
   function open(data) {
     D = data;
+    favs = readFavs();
+    trackerById = new Map(D.trackers.map(t => [t.id, t]));
+    islandOfTracker = new Map();
+    for (const isl of staysIslands()) for (const ht of isl.hotels || []) if (ht.tracker) islandOfTracker.set(ht.tracker, isl.key);
     $('lock').hidden = true;
     $('app').hidden = false;
-    renderHead(); renderOverview(); renderCosts(); renderStays(); renderCourses(); renderSchedule();
-    route();
+    renderHead();
+    route(false);
   }
 
-  const reTheme = () => { if (chart) { chart.applyOptions(chartTheme()); if (D && curTracker) renderChart(); } };
+  const reTheme = () => { if (chart) { chart.applyOptions(chartTheme()); if (D && curTracker && sheet.open) renderChart(); } };
   try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', reTheme); } catch (e) {}
   new MutationObserver(reTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
