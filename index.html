@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Trip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* 구성: 잠금 화면 → 머리(여행 정보) → 탭(개요 / 시세 / 비용 / 일정). 데이터는 data.enc 를 브라우저에서 복호화해 쓴다 */
+:root {
+  --bg: #f3f6f6; --surface: #ffffff; --fg: #12221f; --muted: #5b6d69; --line: #dbe3e1; --grid: #e8eeec;
+  --accent: #0b7a6e; --accent-soft: rgba(11, 122, 110, 0.12);
+  --up: #d23a4b; --down: #2c66d6; --flat: #6b7a77; --target: #c47a12;
+  --font-ui: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-num: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1716; --surface: #16211f; --fg: #e4eeeb; --muted: #93a6a1; --line: #263532; --grid: #1d2a28;
+    --accent: #3cc3b0; --accent-soft: rgba(60, 195, 176, 0.14);
+    --up: #ff6b78; --down: #6f9dff; --flat: #8c9b98; --target: #f0ac45;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1716; --surface: #16211f; --fg: #e4eeeb; --muted: #93a6a1; --line: #263532; --grid: #1d2a28;
+  --accent: #3cc3b0; --accent-soft: rgba(60, 195, 176, 0.14);
+  --up: #ff6b78; --down: #6f9dff; --flat: #8c9b98; --target: #f0ac45;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 14px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+}
+[hidden] { display: none !important; }
+.wrap { width: 100%; max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+h1 { font-size: 20px; margin: 0; font-weight: 700; }
+h2 { font-size: 13px; font-weight: 600; letter-spacing: 0.04em; margin: 0; color: var(--muted); }
+a { color: var(--accent); }
+
+/* 잠금 */
+.lock { min-height: 70vh; display: flex; align-items: center; justify-content: center; }
+.lock form { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 12px; }
+.lock .msg { min-height: 20px; font-size: 13px; color: var(--up); }
+.check { flex-direction: row; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+.check input { width: auto; }
+
+/* 머리, 탭 */
+.head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.head .meta { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--muted); margin-top: 2px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 12px; white-space: nowrap; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tabs a { padding: 8px 12px; text-decoration: none; color: var(--muted); font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.tabs a[aria-current="page"] { color: var(--fg); border-bottom-color: var(--accent); font-weight: 600; }
+
+/* 공통 블록 */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; min-width: 0; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.stat { background: var(--surface); padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.stat .k { font-size: 12px; color: var(--muted); }
+.stat .v { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stat .s { font-size: 11px; color: var(--muted); }
+.up { color: var(--up); } .down { color: var(--down); } .flat { color: var(--flat); }
+.badge { font-size: 11px; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.badge.on { border-color: transparent; background: var(--accent-soft); color: var(--accent); }
+.badge.warn { border-color: transparent; background: color-mix(in srgb, var(--target) 16%, transparent); color: var(--target); }
+.badge.off { text-decoration: line-through; }
+.table-scroll { overflow-x: auto; margin-top: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12px; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+td.r, th.r { text-align: right; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+tfoot td { font-weight: 600; border-top: 1px solid var(--line); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { font: inherit; font-size: 12px; font-weight: 500; padding: 5px 11px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); min-width: 0; }
+input { font: inherit; font-size: 16px; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; min-width: 0; width: 100%; }
+input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.btn { font: inherit; font-weight: 600; font-size: 14px; padding: 10px 14px; border-radius: 8px; border: 0; background: var(--accent); color: var(--surface); cursor: pointer; }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn-ghost { font: inherit; font-size: 12px; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
+.foot { font-size: 12px; color: var(--muted); }
+.empty-note { color: var(--muted); padding: 8px 0; }
+
+/* 개요 */
+.tracker-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.tcard { display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit; }
+.tcard:hover { border-color: var(--accent); }
+.tcard .p { font-family: var(--font-num); font-size: 24px; font-weight: 600; }
+
+/* 시세 */
+.quote { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 28px; }
+.price-big { font-family: var(--font-num); font-size: clamp(32px, 7vw, 48px); font-weight: 600; line-height: 1.05; letter-spacing: -0.02em; }
+.price-big small { font-family: var(--font-ui); font-size: 0.4em; font-weight: 500; margin-left: 4px; color: var(--muted); }
+.delta { font-family: var(--font-num); font-size: 16px; font-weight: 600; }
+.chart-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: center; margin-bottom: 10px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.legend { font-size: 12px; min-height: 18px; display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--muted); margin-bottom: 6px; }
+.legend b { color: var(--fg); font-family: var(--font-num); font-weight: 600; }
+.chart-box { position: relative; height: 340px; }
+#chart { position: absolute; inset: 0; }
+.chart-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px; color: var(--muted); background: var(--surface); }
+.log { max-height: 360px; overflow-y: auto; margin-top: 8px; }
+
+/* 비용 */
+.items { display: flex; flex-direction: column; gap: 12px; }
+.item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; }
+.item .t { font-weight: 600; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.item .amt { text-align: right; font-family: var(--font-num); font-weight: 600; white-space: nowrap; }
+.item .sub { font-size: 12px; color: var(--muted); }
+.item ul { margin: 4px 0 0; padding-left: 18px; font-size: 12px; color: var(--muted); }
+
+/* 일정 */
+.days { display: flex; flex-direction: column; gap: 10px; }
+.day { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 12px; }
+.day .d { font-family: var(--font-num); font-weight: 600; }
+.day .d small { display: block; font-family: var(--font-ui); font-weight: 400; font-size: 12px; color: var(--muted); }
+.day ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.day li { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+.day li .tm { font-family: var(--font-num); font-size: 12px; color: var(--muted); min-width: 40px; }
+@media (max-width: 520px) { .day { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="lock" id="lock">
+    <form id="lock-form" autocomplete="off">
+      <h1>Trip</h1>
+      <label>비밀번호<input type="password" id="pw" autocomplete="current-password" required></label>
+      <label class="check"><input type="checkbox" id="remember" checked>이 기기에서 기억</label>
+      <button class="btn" type="submit" id="unlock">열기</button>
+      <div class="msg" id="lock-msg" role="status"></div>
+    </form>
+  </section>
+
+  <div id="app" hidden>
+    <div class="wrap">
+      <header class="head">
+        <div>
+          <h1 id="title"></h1>
+          <div class="meta" id="trip-meta"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="chip" id="dday"></span>
+          <button class="btn-ghost" type="button" id="lock-btn">잠그기</button>
+        </div>
+      </header>
+      <nav class="tabs" aria-label="화면">
+        <a href="#overview" data-tab="overview">개요</a>
+        <a href="#prices" data-tab="prices">시세</a>
+        <a href="#costs" data-tab="costs">비용</a>
+        <a href="#schedule" data-tab="schedule">일정</a>
+      </nav>
+
+      <section data-view="overview" class="wrap">
+        <div class="stats" id="ov-stats"></div>
+        <section class="panel">
+          <h2>항목별 비용</h2>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>분류</th><th>항목</th><th>상태</th><th class="r">금액</th><th class="r">결제</th></tr></thead>
+              <tbody id="ov-rows"></tbody>
+              <tfoot id="ov-foot"></tfoot>
+            </table>
+          </div>
+        </section>
+        <div class="tracker-cards" id="ov-trackers"></div>
+      </section>
+
+      <section data-view="prices" class="wrap" hidden>
+        <div class="seg" role="group" aria-label="추적 항목" id="tracker-seg"></div>
+        <div>
+          <div style="font-weight:600" id="pr-label"></div>
+          <div class="muted" style="font-size:13px" id="pr-detail"></div>
+        </div>
+        <section class="quote" aria-label="현재 최저가">
+          <div>
+            <div class="muted" style="font-size:12px" id="pr-quote-label">오늘의 최저가</div>
+            <div class="price-big" id="pr-now">—</div>
+          </div>
+          <div>
+            <div class="delta flat" id="pr-delta"></div>
+            <div class="muted" style="font-size:12px" id="pr-delta-sub">&nbsp;</div>
+          </div>
+        </section>
+        <div class="stats" id="pr-stats"></div>
+        <section class="panel" aria-label="가격 차트">
+          <div class="chart-head">
+            <h2>가격 추이</h2>
+            <div class="controls">
+              <div class="seg" role="group" aria-label="기간">
+                <button type="button" data-range="7">1주</button>
+                <button type="button" data-range="30">1개월</button>
+                <button type="button" data-range="90">3개월</button>
+                <button type="button" data-range="all" aria-pressed="true">전체</button>
+              </div>
+              <div class="seg" role="group" aria-label="차트 형태">
+                <button type="button" data-mode="line" aria-pressed="true">일별</button>
+                <button type="button" data-mode="candle">주봉</button>
+              </div>
+            </div>
+          </div>
+          <div class="legend" id="legend"></div>
+          <div class="chart-box">
+            <div id="chart"></div>
+            <div class="chart-empty" id="chart-empty">아직 가격 기록이 없어요. 매일 자동 수집이 돌면 쌓여요.</div>
+          </div>
+        </section>
+        <section class="panel">
+          <h2>기록</h2>
+          <div class="log table-scroll">
+            <table>
+              <thead><tr><th>날짜</th><th class="r">가격</th><th class="r">전일비</th><th>출처</th><th>메모</th></tr></thead>
+              <tbody id="pr-log"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section data-view="costs" class="wrap" hidden>
+        <div class="stats" id="co-stats"></div>
+        <div class="items" id="co-items"></div>
+      </section>
+
+      <section data-view="schedule" class="wrap" hidden>
+        <section class="panel"><div class="days" id="sc-days"></div></section>
+      </section>
+
+      <p class="foot" id="foot"></p>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<script>
+(() => {
+  const STORE = 'trip-key-v1';
+  const $ = id => document.getElementById(id);
+  const won = n => Math.round(n).toLocaleString('ko-KR');
+  const manwon = n => (n / 10000).toLocaleString('ko-KR', { maximumFractionDigits: 1 }) + '만';
+  const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const parseDay = s => new Date(s + 'T00:00:00');
+  const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
+  const dot = s => s.replace(/-/g, '.');
+  const withDow = s => dot(s) + ' (' + WEEK[parseDay(s).getDay()] + ')';
+
+  const CATEGORY = { flight: '항공', stay: '숙소', activity: '투어·액티비티', transport: '교통·렌터카', insurance: '보험', etc: '기타' };
+  const CATEGORY_ORDER = ['flight', 'stay', 'activity', 'transport', 'insurance', 'etc'];
+  const STATUS = { idea: ['후보', ''], tracking: ['시세 추적', 'warn'], booked: ['예약', 'on'], paid: ['결제 완료', 'on'], cancelled: ['취소', 'off'] };
+
+  // 요소 생성: h('td', { className: 'r' }, '텍스트', 자식...)
+  function h(tag, props, ...kids) {
+    const el = document.createElement(tag);
+    if (props) for (const [k, v] of Object.entries(props)) {
+      if (k === 'style') el.style.cssText = v; else if (k in el) el[k] = v; else el.setAttribute(k, v);
+    }
+    for (const k of kids.flat()) if (k !== null && k !== undefined && k !== false) el.append(k);
+    return el;
+  }
+  const badge = status => { const [t, c] = STATUS[status] || [status, '']; return h('span', { className: 'badge ' + c }, t); };
+
+  // ---------- 복호화 ----------
+  const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  const unb64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+  let enc = null;
+
+  async function deriveKey(pw) {
+    const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: b64(enc.salt), iterations: enc.iterations },
+      base, { name: 'AES-GCM', length: 256 }, true, ['decrypt']);
+  }
+  async function decrypt(key) {
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(enc.iv) }, key, b64(enc.ct));
+    return JSON.parse(new TextDecoder().decode(pt));
+  }
+  function readCache() { try { return JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { return null; } }
+  function writeCache(v) { try { v ? localStorage.setItem(STORE, JSON.stringify(v)) : localStorage.removeItem(STORE); } catch (e) {} }
+
+  async function boot() {
+    try {
+      const r = await fetch('data.enc', { cache: 'no-store' });
+      if (!r.ok) throw new Error(r.status);
+      enc = await r.json();
+    } catch (e) {
+      $('lock-msg').textContent = '데이터를 불러오지 못했어요. 새로고침해 주세요.';
+      $('unlock').disabled = true;
+      return;
+    }
+    const c = readCache();
+    if (c && c.salt === enc.salt) {
+      try {
+        const key = await crypto.subtle.importKey('raw', b64(c.raw), 'AES-GCM', true, ['decrypt']);
+        return open(await decrypt(key));
+      } catch (e) { writeCache(null); }
+    }
+    $('pw').focus();
+  }
+
+  $('lock-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!enc) return;
+    $('unlock').disabled = true; $('lock-msg').textContent = '';
+    try {
+      const key = await deriveKey($('pw').value);
+      const data = await decrypt(key);
+      if ($('remember').checked) writeCache({ salt: enc.salt, raw: unb64(await crypto.subtle.exportKey('raw', key)) });
+      $('pw').value = '';
+      open(data);
+    } catch (err) {
+      $('lock-msg').textContent = '비밀번호가 맞지 않아요.';
+    } finally { $('unlock').disabled = false; }
+  });
+  $('lock-btn').addEventListener('click', () => { writeCache(null); location.reload(); });
+
+  // ---------- 데이터 계산 ----------
+  let D = null;
+  let today = ymd(new Date());
+
+  function quotesOf(trackerId) {
+    // 하루 한 값: 직접 기록(manual)이 있으면 그 값, 없으면 자동값
+    const m = new Map();
+    for (const q of D.quotes) {
+      if (q.tracker !== trackerId) continue;
+      const prev = m.get(q.date);
+      if (!prev || (q.kind === 'manual' && prev.kind !== 'manual')) m.set(q.date, q);
+    }
+    return [...m.values()].sort((a, b) => a.date < b.date ? -1 : 1);
+  }
+  function latest(trackerId) { const s = quotesOf(trackerId); return s[s.length - 1] || null; }
+
+  // 항목 금액: 확정가 → 없으면 연결된 시세 × 수량(예상) → 없으면 미정
+  function costOf(it) {
+    const paid = (it.payments || []).reduce((s, p) => s + p.amount, 0);
+    if (it.status === 'cancelled') return { amount: 0, paid, kind: 'cancelled' };
+    if (Number.isInteger(it.price)) return { amount: it.price, paid, kind: 'fixed' };
+    if (it.tracker) {
+      const q = latest(it.tracker);
+      if (q) return { amount: q.price * (it.quantity || 1), paid, kind: 'estimate', quote: q };
+    }
+    return { amount: null, paid, kind: 'unknown' };
+  }
+  function totals() {
+    let fixed = 0, estimate = 0, paid = 0, unknown = 0;
+    for (const it of D.items) {
+      const c = costOf(it);
+      paid += c.paid;
+      if (c.kind === 'fixed') fixed += c.amount;
+      else if (c.kind === 'estimate') estimate += c.amount;
+      else if (c.kind === 'unknown') unknown++;
+    }
+    return { fixed, estimate, total: fixed + estimate, paid, unknown };
+  }
+  function amountText(c) {
+    if (c.kind === 'cancelled') return '—';
+    if (c.amount === null) return '미정';
+    return (c.kind === 'estimate' ? '≈ ' : '') + won(c.amount);
+  }
+  const stat = (k, v, s, cls) => h('div', { className: 'stat' }, h('span', { className: 'k' }, k), h('span', { className: 'v ' + (cls || '') }, v), s ? h('span', { className: 's' }, s) : null);
+
+  // ---------- 머리 ----------
+  function renderHead() {
+    const t = D.trip;
+    document.title = t.title || 'Trip';
+    $('title').textContent = t.title || 'Trip';
+    const nights = Math.round((parseDay(t.end) - parseDay(t.start)) / 86400000);
+    $('trip-meta').replaceChildren(
+      h('span', null, withDow(t.start) + ' – ' + withDow(t.end)),
+      h('span', null, nights + '박 ' + (nights + 1) + '일'),
+      t.destination ? h('span', null, t.destination) : null,
+      h('span', null, t.travelers + '명'),
+    );
+    const d = Math.round((parseDay(t.start) - parseDay(today)) / 86400000);
+    $('dday').textContent = d > 0 ? 'D-' + d : d === 0 ? 'D-DAY' : '다녀왔어요';
+    $('foot').textContent = '데이터 기준 ' + D.builtAt.slice(0, 16).replace('T', ' ') + ' · 시세는 Google Flights 에서 매일 자동 수집한 값이라 실제 결제 화면과 다를 수 있어요. 오르면 빨강, 내리면 파랑.';
+  }
+
+  // ---------- 개요 ----------
+  function renderOverview() {
+    const t = totals();
+    const budget = D.trip.budget;
+    $('ov-stats').replaceChildren(
+      stat('예상 총액', won(t.total) + '원', t.estimate ? '시세 기준 예상 ' + manwon(t.estimate) + ' 포함' : '확정가 합계'),
+      stat('결제 완료', won(t.paid) + '원', null, t.paid ? 'down' : ''),
+      stat('남은 결제', won(Math.max(t.total - t.paid, 0)) + '원', t.unknown ? '금액 미정 ' + t.unknown + '건 제외' : null),
+      budget ? stat('예산 대비', (budget - t.total >= 0 ? '' : '−') + won(Math.abs(budget - t.total)) + '원', '예산 ' + manwon(budget), budget - t.total >= 0 ? 'down' : 'up')
+             : stat('예산', '미설정', null, 'muted'),
+    );
+
+    const rows = [];
+    for (const cat of CATEGORY_ORDER) {
+      const list = D.items.filter(i => i.category === cat);
+      if (!list.length) {
+        rows.push(h('tr', null, h('td', null, CATEGORY[cat]), h('td', { className: 'muted', colSpan: 4 }, '아직 없음')));
+        continue;
+      }
+      list.forEach((it, i) => {
+        const c = costOf(it);
+        rows.push(h('tr', null,
+          h('td', null, i === 0 ? CATEGORY[cat] : ''),
+          h('td', null, it.title),
+          h('td', null, badge(it.status)),
+          h('td', { className: 'r num' }, amountText(c)),
+          h('td', { className: 'r num' }, c.paid ? won(c.paid) : '—'),
+        ));
+      });
+    }
+    $('ov-rows').replaceChildren(...rows);
+    $('ov-foot').replaceChildren(h('tr', null, h('td', { colSpan: 3 }, '합계'), h('td', { className: 'r num' }, won(t.total)), h('td', { className: 'r num' }, won(t.paid))));
+
+    $('ov-trackers').replaceChildren(...D.trackers.filter(tr => tr.active !== false).map(tr => {
+      const s = quotesOf(tr.id);
+      const last = s[s.length - 1], prev = s[s.length - 2];
+      const diff = last && prev ? last.price - prev.price : null;
+      return h('a', { className: 'panel tcard', href: '#prices/' + tr.id },
+        h('h2', null, CATEGORY[tr.category] + ' 시세'),
+        h('div', { style: 'font-weight:600' }, tr.label),
+        h('div', { className: 'p' }, last ? won(last.price) + '원' : '—'),
+        h('div', { className: 'delta ' + (diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat'), style: 'font-size:13px' },
+          diff === null ? (last ? dot(last.date) + ' 기록' : '기록 없음') : deltaText(diff, prev.price) + ' · 전일 대비'),
+        h('div', { className: 'muted', style: 'font-size:12px' }, tr.unit || ''),
+      );
+    }));
+  }
+
+  // ---------- 시세 ----------
+  let curTracker = null, range = 'all', mode = 'line';
+  let chart = null, series = null;
+  const hasLib = typeof LightweightCharts !== 'undefined';
+
+  function deltaText(diff, base) {
+    const pct = base ? Math.abs(diff / base * 100).toFixed(1) : '0.0';
+    return (diff > 0 ? '▲ ' : diff < 0 ? '▼ ' : '– ') + won(Math.abs(diff)) + '원 (' + (diff > 0 ? '+' : diff < 0 ? '−' : '') + pct + '%)';
+  }
+  function chartTheme() {
+    return {
+      layout: { background: { type: 'solid', color: css('--surface') }, textColor: css('--muted'), fontFamily: 'IBM Plex Mono, ui-monospace, monospace', fontSize: 11 },
+      grid: { vertLines: { color: css('--grid') }, horzLines: { color: css('--grid') } },
+      rightPriceScale: { borderVisible: false }, timeScale: { borderVisible: false },
+      crosshair: { vertLine: { color: css('--muted'), labelBackgroundColor: css('--fg') }, horzLine: { color: css('--muted'), labelBackgroundColor: css('--fg') } },
+    };
+  }
+  function ensureChart() {
+    if (chart || !hasLib) return;
+    chart = LightweightCharts.createChart($('chart'), Object.assign({
+      autoSize: true, localization: { locale: 'ko-KR', priceFormatter: p => manwon(p), dateFormat: 'yyyy.MM.dd' },
+    }, chartTheme()));
+    chart.subscribeCrosshairMove(p => renderLegend(p && p.time ? p.time : null));
+  }
+  // 주봉: 월요일 기준으로 묶어 시가/고가/저가/종가
+  function weekly(list) {
+    const m = new Map();
+    for (const q of list) {
+      const d = parseDay(q.date); d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+      const k = ymd(d);
+      const c = m.get(k);
+      if (!c) m.set(k, { time: k, open: q.price, high: q.price, low: q.price, close: q.price });
+      else { c.high = Math.max(c.high, q.price); c.low = Math.min(c.low, q.price); c.close = q.price; }
+    }
+    return [...m.values()];
+  }
+  function renderChart() {
+    const list = quotesOf(curTracker.id);
+    $('chart-empty').hidden = list.length > 0;
+    if (!hasLib) { if (list.length) { $('chart-empty').hidden = false; $('chart-empty').textContent = '차트 라이브러리를 불러오지 못했어요'; } return; }
+    ensureChart();
+    if (series) { chart.removeSeries(series); series = null; }
+    if (mode === 'candle') {
+      series = chart.addCandlestickSeries({ upColor: css('--up'), downColor: css('--down'), borderVisible: false, wickUpColor: css('--up'), wickDownColor: css('--down') });
+      series.setData(weekly(list));
+    } else {
+      series = chart.addAreaSeries({ lineColor: css('--accent'), lineWidth: 2, topColor: css('--accent-soft'), bottomColor: 'rgba(0,0,0,0)', crosshairMarkerRadius: 4 });
+      series.setData(list.map(q => ({ time: q.date, value: q.price })));
+    }
+    if (curTracker.targetPrice) series.createPriceLine({ price: curTracker.targetPrice, color: css('--target'), lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: '목표가' });
+    applyRange();
+  }
+  function applyRange() {
+    if (!chart || !quotesOf(curTracker.id).length) return;
+    if (range === 'all') { chart.timeScale().fitContent(); return; }
+    const from = new Date(); from.setDate(from.getDate() - Number(range));
+    try { chart.timeScale().setVisibleRange({ from: ymd(from), to: today }); } catch (e) { chart.timeScale().fitContent(); }
+  }
+  function renderLegend(time) {
+    const list = quotesOf(curTracker.id);
+    const q = time ? list.find(x => x.date === (typeof time === 'string' ? time : ymd(new Date(time.year, time.month - 1, time.day)))) : list[list.length - 1];
+    if (!q) { $('legend').replaceChildren(); return; }
+    $('legend').replaceChildren(h('span', null, withDow(q.date)), h('span', null, h('b', null, won(q.price)), '원'), q.note ? h('span', null, q.note) : null);
+  }
+  function renderPrices() {
+    const active = D.trackers.filter(t => t.active !== false);
+    if (!curTracker || !active.includes(curTracker)) curTracker = active[0] || null;
+    if (!curTracker) { $('pr-label').textContent = '추적 중인 항목이 없어요.'; return; }
+    $('tracker-seg').hidden = active.length < 2;
+    $('tracker-seg').replaceChildren(...active.map(t => {
+      const b = h('button', { type: 'button' }, t.label);
+      b.setAttribute('aria-pressed', String(t === curTracker));
+      b.addEventListener('click', () => { location.hash = '#prices/' + t.id; });
+      return b;
+    }));
+    $('pr-label').replaceChildren(curTracker.label + ' ', curTracker.url ? h('a', { href: curTracker.url, target: '_blank', rel: 'noopener', style: 'font-size:12px;font-weight:400' }, 'Google 에서 보기') : null);
+    $('pr-detail').textContent = [curTracker.detail, curTracker.unit].filter(Boolean).join(' · ');
+
+    const list = quotesOf(curTracker.id);
+    const last = list[list.length - 1], prev = list[list.length - 2];
+    $('pr-now').replaceChildren(last ? won(last.price) : '—', h('small', null, '원'));
+    $('pr-quote-label').textContent = !last ? '최저가' : last.date === today ? '오늘의 최저가' : dot(last.date) + ' 최저가';
+    const dEl = $('pr-delta');
+    if (last && prev) {
+      const diff = last.price - prev.price;
+      dEl.className = 'delta ' + (diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat');
+      dEl.textContent = deltaText(diff, prev.price);
+      $('pr-delta-sub').textContent = '직전 기록일 ' + dot(prev.date) + ' 대비';
+    } else { dEl.className = 'delta flat'; dEl.textContent = last ? '비교할 전일 기록 없음' : '기록을 기다리는 중'; $('pr-delta-sub').textContent = ' '; }
+
+    const vals = list.map(q => q.price);
+    const min = vals.length ? Math.min(...vals) : null, max = vals.length ? Math.max(...vals) : null;
+    const minQ = list.find(q => q.price === min), maxQ = list.find(q => q.price === max);
+    const tp = curTracker.targetPrice;
+    const fromMin = last && min !== null ? last.price - min : null;
+    $('pr-stats').replaceChildren(
+      stat('기간 최저', min !== null ? won(min) : '—', minQ ? dot(minQ.date) : null),
+      stat('기간 최고', max !== null ? won(max) : '—', maxQ ? dot(maxQ.date) : null),
+      stat('최저 대비', fromMin === null ? '—' : fromMin === 0 ? '최저가' : '+' + won(fromMin), null, fromMin === 0 ? 'down' : fromMin ? 'up' : ''),
+      stat('목표가', tp ? won(tp) : '미설정', tp && last ? (last.price <= tp ? '도달' : manwon(last.price - tp) + ' 남음') : null, tp ? (last && last.price <= tp ? 'down' : '') : 'muted'),
+      stat('기록한 날', list.length + '일', list.length ? dot(list[0].date) + '부터' : null),
+    );
+
+    const rows = [];
+    for (let i = list.length - 1; i >= 0; i--) {
+      const q = list[i], p = list[i - 1];
+      const diff = p ? q.price - p.price : null;
+      rows.push(h('tr', null,
+        h('td', { className: 'num', style: 'white-space:nowrap' }, withDow(q.date)),
+        h('td', { className: 'r num' }, won(q.price)),
+        h('td', { className: 'r num ' + (diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat') }, diff === null ? '—' : (diff > 0 ? '▲ ' : diff < 0 ? '▼ ' : '– ') + won(Math.abs(diff))),
+        h('td', { style: 'white-space:nowrap' }, h('span', { className: 'badge ' + (q.kind === 'auto' ? 'on' : '') }, q.kind === 'auto' ? '자동' : '직접'), ' ', q.source || ''),
+        h('td', { className: 'muted', style: 'font-size:12px' }, q.note || ''),
+      ));
+    }
+    $('pr-log').replaceChildren(...(rows.length ? rows : [h('tr', null, h('td', { colSpan: 5, className: 'muted' }, '아직 없어요.'))]));
+    renderChart();
+    renderLegend(null);
+  }
+  document.querySelectorAll('[data-range]').forEach(b => b.addEventListener('click', () => {
+    range = b.dataset.range;
+    document.querySelectorAll('[data-range]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    applyRange();
+  }));
+  document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => {
+    mode = b.dataset.mode;
+    document.querySelectorAll('[data-mode]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    renderChart();
+  }));
+
+  // ---------- 비용 ----------
+  function renderCosts() {
+    const t = totals();
+    $('co-stats').replaceChildren(
+      stat('확정 금액', won(t.fixed) + '원'),
+      stat('시세 기준 예상', won(t.estimate) + '원', '예약 전 항목'),
+      stat('결제 완료', won(t.paid) + '원', null, t.paid ? 'down' : ''),
+      stat('금액 미정', t.unknown + '건'),
+    );
+    const blocks = [];
+    for (const cat of CATEGORY_ORDER) {
+      const list = D.items.filter(i => i.category === cat);
+      const panel = h('section', { className: 'panel' }, h('h2', null, CATEGORY[cat]));
+      if (!list.length) { panel.append(h('div', { className: 'empty-note' }, '아직 없음')); blocks.push(panel); continue; }
+      for (const it of list) {
+        const c = costOf(it);
+        const when = it.start ? (withDow(it.start) + (it.end && it.end !== it.start ? ' – ' + withDow(it.end) : '')) : '';
+        const sub = [when, it.vendor, it.quantity && it.quantity > 1 ? it.quantity + '명' : ''].filter(Boolean).join(' · ');
+        const pays = (it.payments || []);
+        panel.append(h('div', { className: 'item', style: 'margin-top:10px' },
+          h('div', null,
+            h('div', { className: 't' }, it.title, badge(it.status)),
+            sub ? h('div', { className: 'sub' }, sub) : null,
+            c.kind === 'estimate' ? h('div', { className: 'sub' }, dot(c.quote.date) + ' 시세 ' + won(c.quote.price) + '원 × ' + (it.quantity || 1)) : null,
+            it.note ? h('div', { className: 'sub' }, it.note) : null,
+            it.url ? h('div', { className: 'sub' }, h('a', { href: it.url, target: '_blank', rel: 'noopener' }, '링크')) : null,
+            pays.length ? h('ul', null, pays.map(p => h('li', null, dot(p.date) + ' · ' + won(p.amount) + '원' + (p.note ? ' · ' + p.note : '')))) : null,
+          ),
+          h('div', { className: 'amt' }, amountText(c), c.amount !== null && c.kind !== 'cancelled' ? h('div', { className: 'sub', style: 'font-weight:400' }, c.paid >= c.amount && c.amount ? '완납' : '남은 ' + won(Math.max(c.amount - c.paid, 0))) : null),
+        ));
+      }
+      blocks.push(panel);
+    }
+    $('co-items').replaceChildren(...blocks);
+  }
+
+  // ---------- 일정 ----------
+  function renderSchedule() {
+    const t = D.trip;
+    const itemById = new Map(D.items.map(i => [i.id, i]));
+    const days = [];
+    for (let d = parseDay(t.start), n = 1; d <= parseDay(t.end); d.setDate(d.getDate() + 1), n++) days.push({ date: ymd(d), n });
+    // 여행 기간 밖 일정(예: 사전 준비)도 앞뒤에 붙인다
+    const outside = [...new Set(D.schedule.map(s => s.date).filter(x => x < t.start || x > t.end))].map(date => ({ date, n: null }));
+    const all = [...outside, ...days].sort((a, b) => a.date < b.date ? -1 : 1);
+
+    $('sc-days').replaceChildren(...all.map(({ date, n }) => {
+      const events = D.schedule.filter(s => s.date === date).map(s => h('li', null,
+        s.time ? h('span', { className: 'tm' }, s.time) : null,
+        h('span', null, s.title),
+        s.place ? h('span', { className: 'muted', style: 'font-size:12px' }, s.place) : null,
+        s.item && itemById.get(s.item) ? h('span', { className: 'badge' }, CATEGORY[itemById.get(s.item).category]) : null,
+        s.note ? h('span', { className: 'muted', style: 'font-size:12px' }, s.note) : null,
+      ));
+      // 숙소: 체크인 날부터 체크아웃 전날까지 그 밤의 숙소를 보여 준다
+      for (const it of D.items) {
+        if (it.category !== 'stay' || it.status === 'cancelled' || !it.start || !it.end) continue;
+        if (date >= it.start && date < it.end) events.push(h('li', null, h('span', { className: 'tm' }, '숙박'), h('span', null, it.title), badge(it.status)));
+      }
+      return h('div', { className: 'day' },
+        h('div', { className: 'd' }, dot(date.slice(5)) + ' ' + WEEK[parseDay(date).getDay()], h('small', null, n ? n + '일차' : '여행 전후')),
+        events.length ? h('ul', null, events) : h('div', { className: 'muted' }, '비어 있음'),
+      );
+    }));
+  }
+
+  // ---------- 탭 ----------
+  function route() {
+    const [tab, arg] = (location.hash.slice(1) || 'overview').split('/');
+    const name = ['overview', 'prices', 'costs', 'schedule'].includes(tab) ? tab : 'overview';
+    document.querySelectorAll('[data-tab]').forEach(a => a.dataset.tab === name ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
+    document.querySelectorAll('[data-view]').forEach(v => { v.hidden = v.dataset.view !== name; });
+    if (name === 'prices') {
+      if (arg) curTracker = D.trackers.find(t => t.id === arg) || curTracker;
+      renderPrices();
+    }
+  }
+  window.addEventListener('hashchange', () => D && route());
+
+  function open(data) {
+    D = data;
+    $('lock').hidden = true;
+    $('app').hidden = false;
+    renderHead(); renderOverview(); renderCosts(); renderSchedule();
+    route();
+  }
+
+  const reTheme = () => { if (chart) { chart.applyOptions(chartTheme()); if (D && curTracker) renderChart(); } };
+  try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', reTheme); } catch (e) {}
+  new MutationObserver(reTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  boot();
+})();
+</script>
+</body>
+</html>
