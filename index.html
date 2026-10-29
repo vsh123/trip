@@ -40,6 +40,7 @@ body {
   padding-block: 20px 48px;
 }
 [hidden] { display: none !important; }
+body { overflow-wrap: anywhere; }
 .wrap { width: 100%; max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 .muted { color: var(--muted); }
@@ -129,6 +130,32 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid 
 .day .d small { display: block; font-family: var(--font-ui); font-weight: 400; font-size: 12px; color: var(--muted); }
 .day ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .day li { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+/* 숙소 */
+.island-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.island-head h3 { margin: 0; font-size: 17px; }
+.hotels { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; margin-top: 10px; }
+.hotel { display: flex; flex-direction: column; gap: 8px; }
+.hotel .nm { font-weight: 700; font-size: 15px; }
+.hotel .en { font-size: 12px; color: var(--muted); }
+.hotel .price-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; text-decoration: none; color: inherit; }
+.hotel .price-row b { font-family: var(--font-num); font-size: 18px; }
+.pc { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; }
+.pc ul { margin: 2px 0 0; padding-left: 16px; }
+.pc .k { font-size: 12px; font-weight: 600; }
+.srcs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.srcs .tk { font-size: 12px; color: var(--muted); }
+details summary { cursor: pointer; font-size: 12px; color: var(--muted); }
+select { font: inherit; font-size: 14px; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; max-width: 100%; }
+@media (max-width: 520px) { .pc { grid-template-columns: minmax(0, 1fr); } .hotels { grid-template-columns: minmax(0, 1fr); } }
+.route { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; }
+.route .stop { padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+.route .stop small { color: var(--muted); margin-left: 4px; font-family: var(--font-num); }
+.steps { list-style: none; margin: 6px 0 0; padding: 0; counter-reset: st; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.steps li { counter-increment: st; display: flex; gap: 8px; align-items: baseline; }
+.steps li::before { content: counter(st); font-family: var(--font-num); font-size: 11px; color: var(--accent); background: var(--accent-soft); border-radius: 999px; min-width: 18px; text-align: center; }
+.spot { padding: 8px 0; border-bottom: 1px solid var(--grid); display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.spot:last-child { border-bottom: 0; }
+.spot .meta { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 2px 10px; }
 .day li .tm { font-family: var(--font-num); font-size: 12px; color: var(--muted); min-width: 40px; }
 @media (max-width: 520px) { .day { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -162,6 +189,8 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid 
         <a href="#overview" data-tab="overview">개요</a>
         <a href="#prices" data-tab="prices">시세</a>
         <a href="#costs" data-tab="costs">비용</a>
+        <a href="#stays" data-tab="stays">숙소</a>
+        <a href="#courses" data-tab="courses">코스</a>
         <a href="#schedule" data-tab="schedule">일정</a>
       </nav>
 
@@ -181,7 +210,7 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid 
       </section>
 
       <section data-view="prices" class="wrap" hidden>
-        <div class="seg" role="group" aria-label="추적 항목" id="tracker-seg"></div>
+        <label style="max-width:420px">추적 항목<select id="tracker-select"></select></label>
         <div>
           <div style="font-weight:600" id="pr-label"></div>
           <div class="muted" style="font-size:13px" id="pr-detail"></div>
@@ -235,6 +264,10 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid 
         <div class="items" id="co-items"></div>
       </section>
 
+      <section data-view="stays" class="wrap" hidden><div class="route" id="st-route"></div><div class="wrap" id="st-islands"></div></section>
+
+      <section data-view="courses" class="wrap" hidden><div class="route" id="cs-route"></div><div class="wrap" id="cs-islands"></div></section>
+
       <section data-view="schedule" class="wrap" hidden>
         <section class="panel"><div class="days" id="sc-days"></div></section>
       </section>
@@ -268,7 +301,7 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid 
     if (props) for (const [k, v] of Object.entries(props)) {
       if (k === 'style') el.style.cssText = v; else if (k in el) el[k] = v; else el.setAttribute(k, v);
     }
-    for (const k of kids.flat()) if (k !== null && k !== undefined && k !== false) el.append(k);
+    for (const k of kids.flat(Infinity)) if (k !== null && k !== undefined && k !== false) el.append(k);
     return el;
   }
   const badge = status => { const [t, c] = STATUS[status] || [status, '']; return h('span', { className: 'badge ' + c }, t); };
@@ -421,7 +454,8 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid 
     $('ov-rows').replaceChildren(...rows);
     $('ov-foot').replaceChildren(h('tr', null, h('td', { colSpan: 3 }, '합계'), h('td', { className: 'r num' }, won(t.total)), h('td', { className: 'r num' }, won(t.paid))));
 
-    $('ov-trackers').replaceChildren(...D.trackers.filter(tr => tr.active !== false).map(tr => {
+    const linked = new Set(D.items.filter(i => i.status !== 'cancelled').map(i => i.tracker).filter(Boolean));
+    $('ov-trackers').replaceChildren(...D.trackers.filter(tr => tr.active !== false && linked.has(tr.id)).map(tr => {
       const s = quotesOf(tr.id);
       const last = s[s.length - 1], prev = s[s.length - 2];
       const diff = last && prev ? last.price - prev.price : null;
@@ -504,13 +538,11 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid 
     const active = D.trackers.filter(t => t.active !== false);
     if (!curTracker || !active.includes(curTracker)) curTracker = active[0] || null;
     if (!curTracker) { $('pr-label').textContent = '추적 중인 항목이 없어요.'; return; }
-    $('tracker-seg').hidden = active.length < 2;
-    $('tracker-seg').replaceChildren(...active.map(t => {
-      const b = h('button', { type: 'button' }, t.label);
-      b.setAttribute('aria-pressed', String(t === curTracker));
-      b.addEventListener('click', () => { location.hash = '#prices/' + t.id; });
-      return b;
-    }));
+    const sel = $('tracker-select');
+    sel.parentElement.hidden = active.length < 2;
+    sel.replaceChildren(...CATEGORY_ORDER.filter(c => active.some(t => t.category === c)).map(c =>
+      h('optgroup', { label: CATEGORY[c] }, active.filter(t => t.category === c).map(t => h('option', { value: t.id, selected: t === curTracker }, t.label)))));
+    sel.onchange = () => { location.hash = '#prices/' + sel.value; };
     $('pr-label').replaceChildren(curTracker.label + ' ', curTracker.url ? h('a', { href: curTracker.url, target: '_blank', rel: 'noopener', style: 'font-size:12px;font-weight:400' }, 'Google 에서 보기') : null);
     $('pr-detail').textContent = [curTracker.detail, curTracker.unit].filter(Boolean).join(' · ');
 
@@ -602,10 +634,150 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid 
     $('co-items').replaceChildren(...blocks);
   }
 
+  // ---------- 섬 순서 ----------
+  function islandName(key) {
+    const a = ((D.stays && D.stays.islands) || []).find(i => i.key === key);
+    const b = ((D.courses && D.courses.islands) || []).find(i => i.island === key);
+    return (a && a.name) || (b && b.name) || key;
+  }
+  function renderRoute(el) {
+    const plan = D.plan;
+    if (!plan) { el.replaceChildren(); return; }
+    let cur = parseDay(plan.arrival);
+    const parts = [h('span', { className: 'muted' }, '순서')];
+    plan.order.forEach((st, i) => {
+      const start = ymd(cur); cur.setDate(cur.getDate() + st.nights); const end = ymd(cur);
+      if (i) parts.push(h('span', { className: 'muted' }, '→'));
+      const names = [st.island, ...(st.alternatives || [])].map(islandName).join(' / ');
+      parts.push(h('span', { className: 'stop' }, names, h('small', null, dot(start.slice(5)) + '–' + dot(end.slice(5)) + ' ' + st.nights + '박')));
+    });
+    el.replaceChildren(...parts);
+  }
+  function planOrder() {
+    const keys = [];
+    for (const st of (D.plan && D.plan.order) || []) keys.push(st.island, ...(st.alternatives || []));
+    return keys;
+  }
+
+  // ---------- 코스 ----------
+  const KIND = { sight: '명소', beach: '해변', activity: '액티비티', tour: '투어', food: '맛집', shopping: '쇼핑', view: '전망' };
+  function renderCourses() {
+    renderRoute($('cs-route'));
+    const order = planOrder();
+    const list = [...((D.courses && D.courses.islands) || [])].sort((a, b) => {
+      const x = order.indexOf(a.island), y = order.indexOf(b.island);
+      return (x < 0 ? 99 : x) - (y < 0 ? 99 : y);
+    });
+    if (!list.length) { $('cs-islands').replaceChildren(h('div', { className: 'empty-note' }, '아직 코스가 없어요.')); return; }
+    const stayIsl = new Map(((D.stays && D.stays.islands) || []).map(i => [i.key, i]));
+    $('cs-islands').replaceChildren(...list.map(isl => {
+      const spots = new Map(isl.areas.flatMap(a => a.spots).map(sp => [sp.id, sp]));
+      const st = stayIsl.get(isl.island);
+      return h('section', { className: 'wrap', style: 'gap:8px' },
+        h('div', { className: 'island-head' },
+          h('h3', null, isl.name || islandName(isl.island)),
+          st && st.start ? h('span', { className: 'muted', style: 'font-size:13px' }, withDow(st.start) + ' – ' + withDow(st.end)) : null,
+          st ? h('span', { className: 'badge ' + (st.status === 'confirmed' ? 'on' : 'warn') }, st.status === 'confirmed' ? '확정' : '후보') : null,
+        ),
+        (isl.dayCourses || []).length ? h('div', { className: 'hotels' }, isl.dayCourses.map(c => h('article', { className: 'panel' },
+          h('div', { style: 'font-weight:700' }, c.title, ' ', h('span', { className: 'badge' }, c.length === 'full' ? '하루' : '반나절')),
+          h('ol', { className: 'steps' }, c.steps.map(stp => {
+            const sp = spots.get(stp.spot);
+            return h('li', null, h('span', null, stp.time ? h('span', { className: 'num muted' }, stp.time + ' ') : null, sp ? sp.name : stp.spot, stp.note ? h('span', { className: 'muted', style: 'font-size:12px' }, ' · ' + stp.note) : null));
+          })),
+          c.tip ? h('div', { className: 'muted', style: 'font-size:12px;margin-top:6px' }, c.tip) : null,
+          (c.sources || []).length ? h('div', { style: 'font-size:12px;margin-top:4px' }, c.sources.map((src, k) => [k ? ' · ' : '', h('a', { href: src.url, target: '_blank', rel: 'noopener' }, (SRC[src.type] || src.type))])) : null,
+        ))) : null,
+        h('div', { className: 'hotels' }, isl.areas.map(a => h('section', { className: 'panel' },
+          h('h2', null, a.name),
+          a.summary ? h('div', { className: 'muted', style: 'font-size:12px;margin-top:2px' }, a.summary) : null,
+          a.spots.map(sp => h('div', { className: 'spot' },
+            h('div', null, h('b', null, sp.name), ' ', h('span', { className: 'badge' }, KIND[sp.kind] || sp.kind), sp.reservation ? h('span', { className: 'badge warn', style: 'margin-left:4px' }, '예약') : null),
+            h('div', { className: 'meta' }, [sp.duration, sp.bestTime, sp.cost].filter(Boolean).map(x => h('span', null, x))),
+            sp.reservation ? h('div', { className: 'meta' }, '예약: ' + sp.reservation) : null,
+            sp.honeymoonTip ? h('div', null, sp.honeymoonTip) : null,
+            (sp.cautions || []).length ? h('div', { className: 'meta' }, '주의: ' + sp.cautions.join(' · ')) : null,
+            (sp.sources || []).length ? h('div', { className: 'meta' }, sp.sources.map(src => h('a', { href: src.url, target: '_blank', rel: 'noopener', title: src.takeaway || '' }, (SRC[src.type] || src.type) + ' ' + src.title.slice(0, 28)))) : null,
+          )),
+        ))),
+      );
+    }));
+  }
+
+  // ---------- 숙소 ----------
+  const TIER = { luxury: '럭셔리', upper: '상급', mid: '중급' };
+  const SRC = { blog: '블로그', youtube: '유튜브', cafe: '카페', official: '공식', other: '기타' };
+  function renderStays() {
+    renderRoute($('st-route'));
+    const islands = (D.stays && D.stays.islands) || [];
+    if (!islands.length) { $('st-islands').replaceChildren(h('div', { className: 'empty-note' }, '아직 숙소 후보가 없어요.')); return; }
+    const trackerById = new Map(D.trackers.map(t => [t.id, t]));
+    $('st-islands').replaceChildren(...islands.map(isl => {
+      const nights = isl.start && isl.end ? Math.round((parseDay(isl.end) - parseDay(isl.start)) / 86400000) : null;
+      const hotels = [...(isl.hotels || [])].map(ht => ({ ht, q: ht.tracker ? latest(ht.tracker) : null }))
+        .sort((a, b) => (a.q ? a.q.price : Infinity) - (b.q ? b.q.price : Infinity));
+      return h('section', { className: 'wrap', style: 'gap:8px' },
+        h('div', { className: 'island-head' },
+          h('h3', null, isl.name),
+          h('span', { className: 'badge ' + (isl.status === 'confirmed' ? 'on' : 'warn') }, isl.status === 'confirmed' ? '확정' : '후보'),
+          isl.start ? h('span', { className: 'muted', style: 'font-size:13px' }, withDow(isl.start) + ' – ' + withDow(isl.end) + (nights ? ' · ' + nights + '박' : '') + (isl.datesNote ? ' · ' + isl.datesNote : '')) : null,
+        ),
+        isl.summary ? h('div', { className: 'muted', style: 'font-size:13px' }, isl.summary) : null,
+        h('div', { className: 'hotels' }, hotels.map(({ ht, q }) => {
+          const tr = ht.tracker ? trackerById.get(ht.tracker) : null;
+          const s = ht.tracker ? quotesOf(ht.tracker) : [];
+          const prev = s[s.length - 2];
+          const diff = q && prev ? q.price - prev.price : null;
+          return h('article', { className: 'panel hotel' },
+            h('div', null,
+              h('div', { className: 'nm' }, ht.nameKo, ' ', h('span', { className: 'badge' }, TIER[ht.tier] || ht.tier), ht.adultsOnlyOrQuiet ? h('span', { className: 'badge', style: 'margin-left:4px' }, '조용함') : null),
+              h('div', { className: 'en' }, [ht.nameEn, ht.area].filter(Boolean).join(' · ')),
+            ),
+            tr ? h('a', { className: 'price-row', href: '#prices/' + tr.id },
+              q ? h('b', null, won(q.price) + '원') : h('span', { className: 'muted' }, '가격 수집 전'),
+              q ? h('span', { className: 'muted', style: 'font-size:12px' }, '1박 최저' + (nights ? ' · ' + nights + '박 ≈ ' + manwon(q.price * nights) : '')) : null,
+              diff !== null ? h('span', { className: 'delta ' + (diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat'), style: 'font-size:12px' }, (diff > 0 ? '▲ ' : diff < 0 ? '▼ ' : '– ') + won(Math.abs(diff))) : null,
+            ) : null,
+            (() => {
+              const cs = ht.tracker && D.collectStatus ? D.collectStatus[ht.tracker] : null;
+              if (!cs || cs.state === 'ok') return null;
+              const msg = cs.state === 'unavailable' ? '이 날짜 빈방 없음' + (cs.message ? ' · ' + cs.message : '')
+                : cs.state === 'large-room-only' ? '2인 객실 없음, 큰 객실 가격' : '최근 수집 실패';
+              return h('div', { className: 'badge warn', style: 'white-space:normal' }, dot(cs.date) + ' ' + msg);
+            })(),
+            ht.whyHoneymoon ? h('div', { style: 'font-size:13px' }, ht.whyHoneymoon) : null,
+            h('div', { className: 'pc' },
+              h('div', null, h('div', { className: 'k down' }, '장점'), h('ul', null, (ht.pros || []).map(x => h('li', null, x)))),
+              h('div', null, h('div', { className: 'k up' }, '단점'), h('ul', null, (ht.cons || []).map(x => h('li', null, x)))),
+            ),
+            ht.priceNote ? h('div', { className: 'muted', style: 'font-size:12px' }, '후기 속 가격: ' + ht.priceNote) : null,
+            h('details', null,
+              h('summary', null, '후기 ' + (ht.sources || []).length + '개' + (ht.officialUrl ? ' · 공식 사이트' : '')),
+              h('ul', { className: 'srcs', style: 'margin-top:6px' },
+                ht.officialUrl ? h('li', null, h('a', { href: ht.officialUrl, target: '_blank', rel: 'noopener' }, '공식 사이트')) : null,
+                (ht.sources || []).map(src => h('li', null,
+                  h('span', { className: 'badge' }, SRC[src.type] || src.type), ' ',
+                  h('a', { href: src.url, target: '_blank', rel: 'noopener' }, src.title),
+                  src.status === 'login-required' ? h('span', { className: 'badge', style: 'margin-left:4px' }, '카페 가입 필요') : null,
+                  src.status === 'unverified' ? h('span', { className: 'badge', style: 'margin-left:4px' }, '제목만 확인') : null,
+                  src.publishedAt ? h('span', { className: 'muted', style: 'font-size:12px' }, ' ' + src.publishedAt) : null,
+                  src.takeaway ? h('div', { className: 'tk' }, src.takeaway) : null,
+                )),
+              ),
+            ),
+          );
+        })),
+      );
+    }));
+  }
+
   // ---------- 일정 ----------
   function renderSchedule() {
     const t = D.trip;
     const itemById = new Map(D.items.map(i => [i.id, i]));
+    const cIsl = (D.courses && D.courses.islands) || [];
+    const courseById = new Map(cIsl.flatMap(i => i.dayCourses || []).map(c => [c.id, c]));
+    const spotById = new Map(cIsl.flatMap(i => i.areas || []).flatMap(a => a.spots).map(sp => [sp.id, sp]));
     const days = [];
     for (let d = parseDay(t.start), n = 1; d <= parseDay(t.end); d.setDate(d.getDate() + 1), n++) days.push({ date: ymd(d), n });
     // 여행 기간 밖 일정(예: 사전 준비)도 앞뒤에 붙인다
@@ -619,12 +791,18 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid 
         s.place ? h('span', { className: 'muted', style: 'font-size:12px' }, s.place) : null,
         s.item && itemById.get(s.item) ? h('span', { className: 'badge' }, CATEGORY[itemById.get(s.item).category]) : null,
         s.note ? h('span', { className: 'muted', style: 'font-size:12px' }, s.note) : null,
+        s.course && courseById.get(s.course) ? h('a', { href: '#courses', className: 'badge on', style: 'text-decoration:none' }, '코스') : null,
+        s.course && courseById.get(s.course) ? h('div', { className: 'muted', style: 'font-size:12px;flex-basis:100%' }, courseById.get(s.course).steps.map(st => (spotById.get(st.spot) || {}).name || st.spot).join(' → ')) : null,
       ));
       // 숙소: 체크인 날부터 체크아웃 전날까지 그 밤의 숙소를 보여 준다
       for (const it of D.items) {
         if (it.category !== 'stay' || it.status === 'cancelled' || !it.start || !it.end) continue;
         if (date >= it.start && date < it.end) events.push(h('li', null, h('span', { className: 'tm' }, '숙박'), h('span', null, it.title), badge(it.status)));
       }
+      // 섬 일정: 그 섬에 묵는 밤마다 표시 (후보 섬은 '?' 표시)
+      const nightIslands = ((D.stays && D.stays.islands) || []).filter(isl => isl.start && isl.end && date >= isl.start && date < isl.end);
+      if (nightIslands.length) events.unshift(h('li', null, h('span', { className: 'tm' }, '섬'),
+        h('span', null, nightIslands.map(isl => isl.name + (isl.status === 'confirmed' ? '' : ' ?')).join(' / '))));
       return h('div', { className: 'day' },
         h('div', { className: 'd' }, dot(date.slice(5)) + ' ' + WEEK[parseDay(date).getDay()], h('small', null, n ? n + '일차' : '여행 전후')),
         events.length ? h('ul', null, events) : h('div', { className: 'muted' }, '비어 있음'),
@@ -635,7 +813,7 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid 
   // ---------- 탭 ----------
   function route() {
     const [tab, arg] = (location.hash.slice(1) || 'overview').split('/');
-    const name = ['overview', 'prices', 'costs', 'schedule'].includes(tab) ? tab : 'overview';
+    const name = ['overview', 'prices', 'costs', 'stays', 'courses', 'schedule'].includes(tab) ? tab : 'overview';
     document.querySelectorAll('[data-tab]').forEach(a => a.dataset.tab === name ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
     document.querySelectorAll('[data-view]').forEach(v => { v.hidden = v.dataset.view !== name; });
     if (name === 'prices') {
@@ -649,7 +827,7 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid 
     D = data;
     $('lock').hidden = true;
     $('app').hidden = false;
-    renderHead(); renderOverview(); renderCosts(); renderSchedule();
+    renderHead(); renderOverview(); renderCosts(); renderStays(); renderCourses(); renderSchedule();
     route();
   }
 
